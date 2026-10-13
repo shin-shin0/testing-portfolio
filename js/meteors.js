@@ -1,11 +1,14 @@
 /* =====================================================================
-   meteors.js — falling-star background (canvas)
+   meteors.js — DARK MODE space background (canvas)
    =====================================================================
    WHAT IT DOES
-   - Draws twinkling static stars + diagonal meteors (top-right to
-     bottom-left at 45 degrees) on the fixed <canvas id="meteor-canvas">
-   - Fewer meteors on small screens, pauses when the tab is hidden,
-     and shows only static stars when "reduce motion" is on.
+   - Draws a deep-space sky: lots of colored twinkling stars in three
+     depth layers that drift slowly, a few bright flare stars, and
+     diagonal meteors (top-right to bottom-left at 45 degrees).
+   - (The galaxy swirl and nebula glow behind it are CSS in style.css.)
+   - Runs only in dark mode, pauses when the tab is hidden, uses fewer
+     meteors on small screens, and shows static stars when
+     "reduce motion" is on.
    EDIT HERE: the CONFIG object below.
    ===================================================================== */
 (function () {
@@ -17,8 +20,8 @@
 
   /* ---------- CONFIG (tweak freely) ---------- */
   var CONFIG = {
-    meteorsDesktop: 9,        // simultaneous meteors on desktop
-    meteorsMobile: 4,         // ...on screens narrower than mobileWidth
+    meteorsDesktop: 7,        // simultaneous meteors on desktop
+    meteorsMobile: 3,         // ...on screens narrower than mobileWidth
     mobileWidth: 768,
     speedMin: 520,            // px per second
     speedMax: 1050,
@@ -26,11 +29,12 @@
     lengthMax: 340,
     sizeMin: 1.2,             // line thickness
     sizeMax: 2.6,
-    delayMin: 0.2,            // seconds between a meteor leaving and respawning
-    delayMax: 4.5,
-    starDensity: 1 / 9000,    // stars per px^2
-    starMax: 170,
-    // Colors as "r,g,b" strings: gold, teal, violet, cream
+    delayMin: 0.6,            // seconds between a meteor leaving and respawning
+    delayMax: 6,
+    starDensity: 1 / 4200,    // stars per px^2
+    starMax: 380,
+    drift: [1.5, 4, 8],       // px/second star drift for the far / mid / near layers
+    // Meteor colors as "r,g,b": gold, teal, violet, cream
     colors: ['231,194,125', '127,224,208', '169,139,255', '243,233,210']
   };
 
@@ -45,26 +49,38 @@
 
   function rand(a, b) { return a + Math.random() * (b - a); }
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function isDark() { return document.documentElement.getAttribute('data-theme') !== 'light'; }
 
   /* ---------- Setup ---------- */
+  function starColor() {
+    var roll = Math.random();
+    if (roll < 0.55) return '255,255,255';   // white
+    if (roll < 0.75) return '190,215,255';   // blue-white
+    if (roll < 0.87) return '255,232,200';   // warm
+    if (roll < 0.95) return '200,170,255';   // violet
+    return '150,235,225';                    // teal
+  }
+
   function buildStars() {
-    var count = Math.min(CONFIG.starMax, Math.max(40, Math.round(w * h * CONFIG.starDensity)));
+    var count = Math.min(CONFIG.starMax, Math.max(90, Math.round(w * h * CONFIG.starDensity)));
     stars = [];
     for (var i = 0; i < count; i++) {
+      var layer = Math.floor(Math.random() * 3);   // 0 far, 1 mid, 2 near
       stars.push({
-        x: Math.random(), y: Math.random(),          // normalized 0..1
-        r: Math.random() < 0.12 ? rand(1.4, 2.0) : rand(0.5, 1.2),
+        x: Math.random(), y: Math.random(),         // normalized 0..1
+        layer: layer,
+        r: [0.6, 0.9, 1.3][layer] * rand(0.7, 1.25),
         base: rand(0.35, 0.95),
-        speed: rand(0.6, 2.2),
+        speed: rand(0.6, 2.4),
         phase: Math.random() * Math.PI * 2,
-        color: Math.random() < 0.8 ? '243,233,210' : pick(CONFIG.colors)
+        color: starColor(),
+        flare: layer === 2 && Math.random() < 0.06   // a few bright "cross" stars
       });
     }
   }
 
   function makeMeteor(initial) {
-    var mobile = w < CONFIG.mobileWidth;
-    var scale = mobile ? 0.65 : 1;
+    var scale = w < CONFIG.mobileWidth ? 0.65 : 1;
     return {
       x: 0, y: 0,
       speed: rand(CONFIG.speedMin, CONFIG.speedMax) * scale,
@@ -75,14 +91,11 @@
       active: false
     };
   }
-
   function launch(m) {
-    // Start just above the top edge; x range is wide so meteors also enter from the right side
-    m.x = rand(0, w + h);
+    m.x = rand(0, w + h);   // wide range so meteors also enter from the right side
     m.y = -30;
     m.active = true;
   }
-
   function buildMeteors() {
     var n = w < CONFIG.mobileWidth ? CONFIG.meteorsMobile : CONFIG.meteorsDesktop;
     meteors = [];
@@ -98,18 +111,35 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     buildStars();
     buildMeteors();
-    if (!running) drawFrame(0, true);
+    if (!running && isDark()) drawFrame(0, true);
   }
 
   /* ---------- Drawing ---------- */
-  function drawStars(t, still) {
+  function drawStars(t, dt, still) {
     for (var i = 0; i < stars.length; i++) {
       var s = stars[i];
+      if (!still) {
+        s.x -= (CONFIG.drift[s.layer] / w) * dt;   // slow drift to the left
+        if (s.x < 0) s.x += 1;
+      }
       var tw = still ? 0.8 : 0.55 + 0.45 * Math.sin(t * s.speed + s.phase);
-      ctx.globalAlpha = s.base * tw;
+      var a = s.base * tw;
+      var px = s.x * w, py = s.y * h;
+      ctx.globalAlpha = a;
       ctx.fillStyle = 'rgb(' + s.color + ')';
       var size = s.r * 1.6;
-      ctx.fillRect(s.x * w - size / 2, s.y * h - size / 2, size, size);
+      ctx.fillRect(px - size / 2, py - size / 2, size, size);
+
+      if (s.flare) {   // soft glow + little cross
+        var len = 5 + 5 * tw;
+        ctx.strokeStyle = 'rgb(' + s.color + ')';
+        ctx.lineWidth = 0.8;
+        ctx.globalAlpha = a * 0.7;
+        ctx.beginPath();
+        ctx.moveTo(px - len, py); ctx.lineTo(px + len, py);
+        ctx.moveTo(px, py - len); ctx.lineTo(px, py + len);
+        ctx.stroke();
+      }
     }
     ctx.globalAlpha = 1;
   }
@@ -130,7 +160,6 @@
     ctx.lineTo(tx, ty);
     ctx.stroke();
 
-    // Bright glowing head
     var r = m.size * 5;
     var hg = ctx.createRadialGradient(m.x, m.y, 0, m.x, m.y, r);
     hg.addColorStop(0, 'rgba(255,255,255,0.95)');
@@ -144,7 +173,7 @@
 
   function drawFrame(dt, still) {
     ctx.clearRect(0, 0, w, h);
-    drawStars(time, still);
+    drawStars(time, dt, still);
     if (still) return;
 
     for (var i = 0; i < meteors.length; i++) {
@@ -156,7 +185,6 @@
       }
       m.x += DIR_X * m.speed * dt;
       m.y += DIR_Y * m.speed * dt;
-      // Fully off-screen (tail included)? Respawn later with new random traits.
       if (m.x < -m.len - 40 || m.y > h + m.len + 40) {
         meteors[i] = makeMeteor(false);
         continue;
@@ -175,7 +203,7 @@
     rafId = requestAnimationFrame(loop);
   }
   function start() {
-    if (running || reduceMQ.matches) return;
+    if (running || reduceMQ.matches || !isDark() || document.hidden) return;
     running = true;
     last = 0;
     rafId = requestAnimationFrame(loop);
@@ -189,13 +217,18 @@
   var resizeTimer;
   window.addEventListener('resize', function () {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(resize, 150);   // throttled
+    resizeTimer = setTimeout(resize, 150);
   });
   document.addEventListener('visibilitychange', function () {
     if (document.hidden) stop(); else start();
   });
+  // Light/dark switch: stop in light mode (the canvas is hidden), restart in dark
+  window.addEventListener('themechange', function () {
+    if (!isDark()) { stop(); return; }
+    if (reduceMQ.matches) drawFrame(0, true); else start();
+  });
   function onMotionChange() {
-    if (reduceMQ.matches) { stop(); drawFrame(0, true); } else start();
+    if (reduceMQ.matches) { stop(); if (isDark()) drawFrame(0, true); } else start();
   }
   if (reduceMQ.addEventListener) reduceMQ.addEventListener('change', onMotionChange);
   else if (reduceMQ.addListener) reduceMQ.addListener(onMotionChange);

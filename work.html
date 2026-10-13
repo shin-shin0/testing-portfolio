@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<!--
+  =====================================================================
+  GENSHIN-INSPIRED PORTFOLIO  —  PAGE 2 of 2: work.html
+  (Showcase + Contact.  Page 1 = index.html has Hero, About, Skills)
+  =====================================================================
+  QUICK EDIT GUIDE (full details in README.md)
+  1. Search this file for "[" to find every placeholder in [BRACKETS].
+  2. Every button link is marked with a  🔗  comment.
+  3. No inline <style> or <script> is used; everything is linked below.
+  =====================================================================
+-->
+<html lang="en" class="no-js">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Work &amp; Contact — [YOUR NAME]</title>
+  <meta name="description" content="[Selected projects by YOUR NAME, and how to get in touch.]">
+  <meta name="theme-color" content="#0b0f1f">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="js/theme.js"></script>
+  <script src="js/main.js" defer></script>
+  <script src="js/meteors.js" defer></script>
+  <script src="js/wind.js" defer></script>
+  <script src="js/cursor.js" defer></script>
+  <script src="js/card3d.js" defer></script>
+  <script src="js/showcase.js" defer></script>
+  <script src="js/marquee.js" defer></script>
+</head>
+
+<body>
+  <a class="skip-link" href="#showcase">Skip to content</a>
+
+  <div id="bg-base" aria-hidden="true"></div>
+  <div id="bg-galaxy" aria-hidden="true"></div>
+  <div id="bg-constellation" aria-hidden="true"></div>
+  <div id="bg-clouds" aria-hidden="true"></div>
+  <div id="bg-scenery" aria-hidden="true"></div>
+  <canvas id="meteor-canvas" aria-hidden="true"></canvas>
+  <canvas id="wind-canvas" aria-hidden="true"></canvas>
+  <div id="bg-vignette" aria-hidden="true"></div>
+
+  <!-- ===== NAVBAR ===== -->
+  <header class="site-header" id="site-header">
+    <div class="nav-inner">
+      <a class="brand" href="index.html" aria-label="[YOUR NAME] — back to home page">
+        <svg class="brand-star" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z"/></svg>
+        <span>[YOUR NAME]</span>
+      </a>
+
+      <nav id="nav-menu" class="nav-links" aria-label="Main">
+        <a href="index.html">Home</a>
+        <a href="index.html#about">About</a>
+        <a href="index.html#skills">Skills</a>
+        <a href="#showcase" class="is-active">Work</a>
+        <a href="#contact">Contact</a>
+      </nav>
+
+      <div class="nav-actions">
+        <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
+          <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
+        </button>
+        <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-menu" aria-label="Open menu">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- =================== 4. SHOWCASE (one belt) =================== -->
+    <section class="section section--wide section--first" id="showcase" aria-labelledby="showcase-title" data-showcase>
+      <div class="container">
+        <header class="section-head section-head--row reveal">
+          <div>
+            <p class="eyebrow">✦ Showcase</p>
+            <h2 id="showcase-title">Chronicles of Past Journeys</h2>
+          </div>
+          <div class="showcase-controls">
+            <button class="arrow-btn" type="button" data-prev aria-label="Previous projects">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4 7 12l8 8" /></svg>
+            </button>
+            <button class="arrow-btn" type="button" data-next aria-label="Next projects">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 4 8 8-8 8" /></svg>
+            </button>
+          </div>
+        </header>
+      </div>
+
+      <div class="showcase-viewport" id="showcase-row-1" data-row data-speed="40"
+           tabindex="0" role="region" aria-roledescription="carousel"
+           aria-label="Projects carousel. Use the left and right arrow keys to scroll.">
+        <ul class="showcase-track">
+
+          <!-- Each <li class="project-slot"> is one card. Copy one to add more. -->
+          <li class="project-slot">
+            <article class="project-card panel">
+              <!-- IMAGE: replace the thumb contents with <img src="images/project-1.jpg" alt="[Describe project 1]"> -->
+              <div class="project-thumb"><span>[PROJECT IMAGE 1]</span></div>
+              <div class="project-body">
+                <h3>[Project Title 1]</h3>
+                <p>[One or two sentences describing this project and your role.]</p>
+                <!-- 🔗 YOUR LINK: change the href below -->
+                <a class="btn btn--small" href="https://example.com/[project-1]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+              </div>
+            </article>
+          </li>
+
+          <li class="project-slot">
+            <article class="project-card panel">
+              <div class="project-thumb"><span>[PROJECT IMAGE 2]</span></div>
+              <div class="project-body">
+                <h3>[Project Title 2]</h3>
+                <p>[One or two sentences describing this project and your role.]</p>
+                <!-- 🔗 YOUR LINK -->
+                <a class="btn btn--small" href="https://example.com/[project-2]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+              </div>
+            </article>
+          </li>
+
+          <li class="project-slot">
+            <article class="project-card panel">
+              <div class="project-thumb"><span>[PROJECT IMAGE 3]</span></div>
+              <div class="project-body">
+                <h3>[Project Title 3]</h3>
+                <p>[One or two sentences describing this project and your role.]</p>
+                <!-- 🔗 YOUR LINK -->
+                <a class="btn btn--small" href="https://example.com/[project-3]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+              </div>
+            </article>
+          </li>
+
+          <li class="project-slot">
+            <article class="project-card panel">
+              <div class="project-thumb"><span>[PROJECT IMAGE 4]</span></div>
+              <div class="project-body">
+                <h3>[Project Title 4]</h3>
+                <p>[One or two sentences describing this project and your role.]</p>
+                <!-- 🔗 YOUR LINK -->
+                <a class="btn btn--small" href="https://example.com/[project-4]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+              </div>
+            </article>
+          </li>
+
+          <li class="project-slot">
+            <article class="project-card panel">
+              <div class="project-thumb"><span>[PROJECT IMAGE 5]</span></div>
+              <div class="project-body">
+                <h3>[Project Title 5]</h3>
+                <p>[One or two sentences describing this project and your role.]</p>
+                <!-- 🔗 YOUR LINK -->
+                <a class="btn btn--small" href="https://example.com/[project-5]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+              </div>
+            </article>
+          </li>
+
+          <li class="project-slot">
+            <article class="project-card panel">
+              <div class="project-thumb"><span>[PROJECT IMAGE 6]</span></div>
+              <div class="project-body">
+                <h3>[Project Title 6]</h3>
+                <p>[One or two sentences describing this project and your role.]</p>
+                <!-- 🔗 YOUR LINK -->
+                <a class="btn btn--small" href="https://example.com/[project-6]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+              </div>
+            </article>
+          </li>
+
+        </ul>
+      </div>
+    </section>
+
+    <div class="star-divider" aria-hidden="true"><span></span><i></i><span></span></div>
+
+    <!-- =================== 5. CONTACT + PASSING-BY TEXT =================== -->
+    <section class="contact" id="contact" aria-labelledby="contact-title">
+
+      <!-- Passing-by strips (decorative). Each phrase is short so it fits fully on screen.
+           Edit the words inside each .m-item. -->
+      <div class="marquee-rows" aria-hidden="true">
+        <div class="marquee-row" data-marquee data-speed="55" data-dir="1">
+          <div class="marquee-track"><div class="marquee-set">
+            <span class="m-item m-solid">Let's create together</span><span class="m-star"></span>
+          </div></div>
+        </div>
+        <div class="marquee-row" data-marquee data-speed="45" data-dir="-1">
+          <div class="marquee-track"><div class="marquee-set">
+            <span class="m-item m-outline">Get in touch</span><span class="m-star"></span>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- 3D floating contact card -->
+      <div class="scene3d contact-scene fd-1 reveal">
+        <div class="float3d">
+          <div class="tilt3d" data-tilt-card>
+            <span class="plate plate--2" aria-hidden="true"></span>
+            <span class="plate plate--1" aria-hidden="true"></span>
+            <div class="contact-card panel">
+              <p class="eyebrow">✦ Contact</p>
+              <h2 id="contact-title">Begin a New Journey</h2>
+              <p>[A short message inviting people to reach out — collaborations, jobs, or just to say hello.]</p>
+
+              <!-- 🔗 YOUR LINKS: change each href (the link) AND the [text] shown under the name -->
+              <ul class="contact-links">
+                <li><a href="mailto:you@example.com">Email <span>[you@example.com]</span></a></li>
+                <li><a href="https://github.com/[username]" target="_blank" rel="noopener">GitHub <span>[@username]</span></a></li>
+                <li><a href="https://facebook.com/[username]" target="_blank" rel="noopener">Facebook <span>[/username]</span></a></li>
+              </ul>
+              <span class="sheen" aria-hidden="true"></span>
+            </div>
+            <span class="depth-star depth-star--a" aria-hidden="true"></span>
+            <span class="depth-star depth-star--b" aria-hidden="true"></span>
+          </div>
+        </div>
+        <span class="ground-shadow" aria-hidden="true"></span>
+      </div>
+
+      <div class="marquee-rows" aria-hidden="true">
+        <div class="marquee-row" data-marquee data-speed="65" data-dir="1">
+          <div class="marquee-track"><div class="marquee-set">
+            <span class="m-item m-outline">[Your Name]</span><span class="m-star"></span>
+            <span class="m-item m-solid">[Your Name]</span><span class="m-star"></span>
+          </div></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>© <span id="year">2026</span> [YOUR NAME]. An original fan-inspired design — no official game assets used. · <a href="index.html">← Back to home</a></p>
+  </footer>
+</body>
+</html>

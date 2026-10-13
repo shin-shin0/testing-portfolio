@@ -25,8 +25,10 @@
     ringEase: 0.12,        // lower = more lag for the trailing ring
     trailEvery: 14,        // px of movement between trail sparkles
     burstCount: 16,        // sparkles per click
-    colors: ['231,194,125', '127,224,208', '169,139,255', '243,233,210']
+    colors: ['231,194,125', '127,224,208', '169,139,255', '243,233,210'],
+    colorsLight: ['185,137,44', '19,143,130', '111,82,230', '255,255,255']   // darker sparkles for light mode
   };
+  function isLight() { return document.documentElement.getAttribute('data-theme') === 'light'; }
   var HOVER_SELECTOR = 'a, button, [role="button"], input, textarea, select, summary, .panel, .project-card, .skill-card, [data-cursor-hover]';
 
   var STAR_PATH = 'M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z';
@@ -85,7 +87,8 @@
 
   /* ---------- Particles ---------- */
   function spawn(x, y, burst) {
-    var color = CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)];
+    var palette = isLight() ? CONFIG.colorsLight : CONFIG.colors;
+    var color = palette[Math.floor(Math.random() * palette.length)];
     var angle = Math.random() * Math.PI * 2;
     var speed = burst ? 60 + Math.random() * 140 : 8 + Math.random() * 22;
     particles.push({
@@ -137,7 +140,8 @@
 
     if (!reduce) {
       ctx.clearRect(0, 0, vw, vh);
-      ctx.globalCompositeOperation = 'lighter';
+      // "lighter" glows on dark backgrounds but vanishes on light ones
+      ctx.globalCompositeOperation = isLight() ? 'source-over' : 'lighter';
       for (var i = particles.length - 1; i >= 0; i--) {
         var p = particles[i];
         p.life += dt;
