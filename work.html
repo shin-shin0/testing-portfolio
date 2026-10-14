@@ -24,17 +24,40 @@
 
   <link rel="stylesheet" href="style.css">
 
+  <script src="js/loader.js"></script>
   <script src="js/theme.js"></script>
+  <script src="js/scrollfx.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/meteors.js" defer></script>
   <script src="js/wind.js" defer></script>
   <script src="js/cursor.js" defer></script>
   <script src="js/card3d.js" defer></script>
+  <script src="js/puzzle.js" defer></script>
   <script src="js/showcase.js" defer></script>
   <script src="js/marquee.js" defer></script>
 </head>
 
 <body>
+
+  <!-- ===== LOADING SCREEN (js/loader.js fills the bar and fades this out) ===== -->
+  <div id="loader" role="status" aria-live="polite" aria-label="Loading">
+    <div class="ld-sky" aria-hidden="true"></div>
+    <div class="ld-center">
+      <svg class="ld-emblem" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+        <circle class="r1" cx="100" cy="100" r="92"/>
+        <circle class="r2" cx="100" cy="100" r="72"/>
+        <g class="orbit"><circle class="orb" cx="100" cy="8" r="4.5"/></g>
+        <path class="core" d="M100 52 110 90 148 100 110 110 100 148 90 110 52 100 90 90Z"/>
+      </svg>
+      <p class="ld-name">[YOUR NAME]</p>
+      <p class="ld-sub">Portfolio</p>
+    </div>
+    <div class="ld-bottom">
+      <p class="ld-tip" id="ld-tip">Tip: Hover over cards to make them lean toward you.</p>
+      <div class="ld-bar" id="ld-bar"><i></i><b></b></div>
+      <p class="ld-pct"><span id="ld-pct">0</span>%</p>
+    </div>
+  </div>
   <a class="skip-link" href="#showcase">Skip to content</a>
 
   <div id="bg-base" aria-hidden="true"></div>
@@ -42,6 +65,22 @@
   <div id="bg-constellation" aria-hidden="true"></div>
   <div id="bg-clouds" aria-hidden="true"></div>
   <div id="bg-scenery" aria-hidden="true"></div>
+  <!-- LIGHT mode only: the windmill on the hill (fan spins, tower sways) -->
+  <div id="bg-windmill" aria-hidden="true">
+    <svg viewBox="0 0 120 170" focusable="false">
+      <path d="M38 164 46 74h28l8 90Z" fill="#f6efdc" stroke="#d4a64a" stroke-width="1.5"/>
+      <path d="M42 74 60 52l18 22Z" fill="#42a8b8" stroke="#d4a64a" stroke-width="1.2"/>
+      <rect x="55" y="132" width="10" height="32" rx="5" fill="#d9c89a"/>
+      <rect x="55" y="90" width="10" height="14" rx="2" fill="#9fd8ea"/>
+      <g class="wm-fan" fill="#fffaf0" stroke="#d4a64a" stroke-width="1.1">
+        <g><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
+        <g transform="rotate(90 60 66)"><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
+        <g transform="rotate(180 60 66)"><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
+        <g transform="rotate(270 60 66)"><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
+      </g>
+      <circle cx="60" cy="66" r="5" fill="#d4a64a"/>
+    </svg>
+  </div>
   <canvas id="meteor-canvas" aria-hidden="true"></canvas>
   <canvas id="wind-canvas" aria-hidden="true"></canvas>
   <div id="bg-vignette" aria-hidden="true"></div>
@@ -198,7 +237,7 @@
       </div>
 
       <!-- 3D floating contact card -->
-      <div class="scene3d contact-scene fd-1 reveal">
+      <div class="scene3d contact-scene fd-1">
         <div class="float3d">
           <div class="tilt3d" data-tilt-card>
             <span class="plate plate--2" aria-hidden="true"></span>

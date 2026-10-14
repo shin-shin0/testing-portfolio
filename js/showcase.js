@@ -31,6 +31,7 @@
     friction: 0.04           // momentum decay after a drag (lower = stops sooner)
   };
 
+  var modalOpen = false;   // true while a card is presented (belt pauses)
   function mod(n, m) { return ((n % m) + m) % m; }
 
   /* ---------- One carousel row ---------- */
@@ -141,7 +142,7 @@
   Row.prototype.nudge = function (px) { this.pending += px; this.vel = 0; };
 
   Row.prototype.tick = function (dt, now) {
-    var paused = this.hover || this.focus || this.touching || this.dragging || now < this.resumeAt;
+    var paused = modalOpen || this.hover || this.focus || this.touching || this.dragging || now < this.resumeAt;
     this.factor += ((paused ? 0 : 1) - this.factor) * Math.min(1, dt * 4);
 
     var move = this.dir * this.speed * this.factor * dt;
@@ -247,6 +248,82 @@
   function remeasure() { rows.forEach(function (r) { r.measure(); }); }
   window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(remeasure, 150); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
+
+  /* ---------- Click a card: it is pulled out of the deck and presented; the page blurs behind it ---------- */
+  var pulled = null;
+  var X_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5l14 14M19 5 5 19"/></svg>';
+  function fitTo(w, h) {
+    var s = Math.min(1.6, innerHeight * 0.84 / h, innerWidth * 0.92 / w);
+    return 'translate3d(' + ((innerWidth - w * s) / 2).toFixed(1) + 'px,' + ((innerHeight - h * s) / 2).toFixed(1) + 'px,0) scale(' + s.toFixed(3) + ')';
+  }
+  function fromRect(r, w) {
+    return 'translate3d(' + r.left.toFixed(1) + 'px,' + r.top.toFixed(1) + 'px,0) scale(' + (r.width / w).toFixed(3) + ')';
+  }
+  function openCard(card) {
+    if (pulled || modalOpen) return;
+    var slot = card.closest('.project-slot');
+    var w = card.offsetWidth, h = card.offsetHeight, r = card.getBoundingClientRect();
+    var back = document.createElement('div'); back.className = 'card-backdrop';
+    var pull = card.cloneNode(true);
+    pull.classList.add('card-pull');
+    pull.removeAttribute('tabindex'); pull.removeAttribute('aria-haspopup'); pull.removeAttribute('aria-hidden');
+    pull.setAttribute('role', 'dialog'); pull.setAttribute('aria-modal', 'true');
+    var title = pull.querySelector('h3'); if (title) pull.setAttribute('aria-label', title.textContent);
+    pull.style.width = w + 'px'; pull.style.height = h + 'px'; pull.style.transform = fromRect(r, w);   // starts exactly where the card sits
+    var x = document.createElement('button');
+    x.type = 'button'; x.className = 'arrow-btn card-x'; x.setAttribute('aria-label', 'Close project'); x.innerHTML = X_ICON;
+    document.body.appendChild(back); document.body.appendChild(pull); document.body.appendChild(x);
+    pulled = { card: card, slot: slot, back: back, pull: pull, x: x, w: w, h: h };
+    modalOpen = true;
+    if (slot) slot.classList.add('is-pulled');
+    document.documentElement.classList.add('modal-open');
+    requestAnimationFrame(function () { requestAnimationFrame(function () {
+      back.classList.add('is-open'); x.classList.add('is-open'); pull.classList.add('is-presented');
+      pull.style.transform = fitTo(w, h);
+    }); });
+    back.addEventListener('click', closeCard);
+    x.addEventListener('click', closeCard);
+    x.focus({ preventScroll: true });
+  }
+  function closeCard() {
+    if (!pulled) return;
+    var p = pulled; pulled = null;
+    var r = p.card.getBoundingClientRect(), done = false;
+    p.back.classList.remove('is-open'); p.x.classList.remove('is-open'); p.pull.classList.remove('is-presented');
+    p.pull.style.transform = fromRect(r, p.w);   // slides back into the deck
+    function end() {
+      if (done) return; done = true;
+      p.back.remove(); p.pull.remove(); p.x.remove();
+      if (p.slot) p.slot.classList.remove('is-pulled');
+      document.documentElement.classList.remove('modal-open');
+      modalOpen = false;
+      try { p.card.focus({ preventScroll: true }); } catch (err) { /* ignore */ }
+    }
+    p.pull.addEventListener('transitionend', function (e) { if (e.propertyName === 'transform') end(); });
+    setTimeout(end, 950);
+  }
+  Array.prototype.forEach.call(root.querySelectorAll('[data-row] .project-slot:not([data-clone]) .project-card'), function (c) {
+    c.tabIndex = 0; c.setAttribute('aria-haspopup', 'dialog');
+  });
+  root.addEventListener('click', function (e) {
+    var card = e.target.closest('.project-card');
+    if (!card || e.target.closest('a, button')) return;
+    openCard(card);
+  });
+  root.addEventListener('keydown', function (e) {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('project-card')) { e.preventDefault(); openCard(e.target); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (!pulled) return;
+    if (e.key === 'Escape') closeCard();
+    else if (e.key === 'Tab') {   // keep keyboard focus on the presented card
+      var items = [pulled.x].concat(Array.prototype.slice.call(pulled.pull.querySelectorAll('a')));
+      var i = items.indexOf(document.activeElement);
+      e.preventDefault();
+      items[(i + (e.shiftKey ? items.length - 1 : 1)) % items.length].focus();
+    }
+  });
+  window.addEventListener('resize', function () { if (pulled) closeCard(); });
 
   /* ---------- Shared animation loop (runs only while visible) ---------- */
   var running = false, visible = true, rafId = 0, last = 0;
