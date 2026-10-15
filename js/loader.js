@@ -3,61 +3,103 @@
    =====================================================================
    WHAT IT DOES
    - Shows a full-screen loading page (spinning emblem, your name, a
-     random "Tip:" line and a glowing progress bar) until the page,
-     fonts and images are ready, then fades it out.
-   - Loaded WITHOUT "defer" (in <head>) so the screen is up before the
-     first paint. The markup is the #loader block at the top of <body>.
-   - First visit of a session shows it for ~2 s; later pages ~0.5 s.
-   EDIT HERE: TIPS, MIN_FIRST and MIN_NEXT below.
+     rotating "tip", a gold progress bar with a star at its tip) while
+     the page loads, then fades away and lets the hero text animate in.
+   - This file is loaded WITHOUT "defer" in <head> so the loading
+     screen is on screen from the very first paint.
+   - The markup is the <div id="loader"> at the top of each page's
+     <body>; edit your name / tips there. Tips are the data-tips
+     attribute, separated by "|".
+   EDIT HERE: the CONFIG object below.
    ===================================================================== */
 (function () {
   'use strict';
+
   var root = document.documentElement;
-  root.classList.add('is-loading');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var TIPS = [
-    'Tip: Hover over cards to make them lean toward you.',
-    'Tip: Press the sun / moon button to travel between the galaxy and Mondstadt.',
-    'Tip: Drag the project belt sideways to look around.',
-    'Tip: Click anywhere for a burst of sparkles (or a gust of wind).',
-    'Tip: Keep an eye on the sky. A traveler is out exploring.'
-  ];
-  var MIN_FIRST = 2000, MIN_NEXT = 500, MAX = 7000;   // ms
+  /* ---------- CONFIG ---------- */
+  var CONFIG = {
+    minTime: reduce ? 500 : 2600,   // ms the screen stays up at least (so the animation can be enjoyed)
+    maxTime: 8000,                  // ms safety limit: always leave after this, even if something is slow
+    tipEvery: 1500,                 // ms between tips
+    skipOnRepeat: false             // true = only show once per browser tab session (not on every page)
+  };
 
-  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // JS is running: turn on JS-only styles and lock scrolling behind the loader
+  root.classList.remove('no-js');
+  root.classList.add('js');
+
   var seen = false;
-  try { seen = sessionStorage.getItem('portfolio-seen') === '1'; sessionStorage.setItem('portfolio-seen', '1'); } catch (e) {}
-  var MIN = reduce ? 0 : (seen ? MIN_NEXT : MIN_FIRST);
+  try { seen = sessionStorage.getItem('portfolio-loaded') === '1'; } catch (e) { /* ignore */ }
+  if (CONFIG.skipOnRepeat && seen) return;   // no loader: page just shows
 
-  var loaded = false, done = false, prog = 0, t0 = performance.now();
-  window.addEventListener('load', function () { loaded = true; });
-  setTimeout(function () { loaded = true; }, MAX);
+  root.classList.add('js-loading');
 
   document.addEventListener('DOMContentLoaded', function () {
-    var el = document.getElementById('loader');
-    if (!el) { root.classList.remove('is-loading'); return; }
-    var bar = document.getElementById('ld-bar'), pct = document.getElementById('ld-pct'), tip = document.getElementById('ld-tip');
-    tip.textContent = TIPS[Math.floor(Math.random() * TIPS.length)];
+    var loader = document.getElementById('loader');
+    if (!loader) { root.classList.remove('js-loading'); return; }
+
+    var tipEl = document.getElementById('loader-tip');
+    var tipWrap = tipEl && tipEl.parentNode;
+    var textEl = document.getElementById('loader-text');
+    var pctEl = document.getElementById('loader-pct');
+    var tips = (loader.getAttribute('data-tips') || '').split('|').filter(Boolean);
+
+    /* ---------- rotating tips ---------- */
+    var tipIndex = Math.floor(Math.random() * Math.max(1, tips.length));
+    function showTip() {
+      if (!tipEl || !tips.length) return;
+      tipWrap.classList.add('is-swap');
+      setTimeout(function () {
+        tipEl.textContent = tips[tipIndex % tips.length];
+        tipIndex++;
+        tipWrap.classList.remove('is-swap');
+      }, 250);
+    }
+    if (tipEl && tips.length) { tipEl.textContent = tips[tipIndex % tips.length]; tipIndex++; }
+    var tipTimer = setInterval(showTip, CONFIG.tipEvery);
+
+    /* ---------- progress ---------- */
+    var startTime = performance.now();
+    var pageLoaded = document.readyState === 'complete';
+    window.addEventListener('load', function () { pageLoaded = true; });
+
+    var progress = 0, finished = false;
+
+    function setProgress(p) {
+      loader.style.setProperty('--p', p.toFixed(4));
+      if (pctEl) pctEl.textContent = Math.round(p * 100) + '%';
+    }
 
     function finish() {
-      if (done) return; done = true;
+      if (finished) return;
+      finished = true;
+      clearInterval(tipTimer);
+      setProgress(1);
+      if (textEl) textEl.textContent = 'Ready';
+      try { sessionStorage.setItem('portfolio-loaded', '1'); } catch (e) { /* ignore */ }
       setTimeout(function () {
-        root.classList.add('is-ready');                       // CSS fades the screen out
+        loader.classList.add('is-done');          // fade + emblem flourish
+        root.classList.remove('js-loading');      // un-pause the hero + unlock scrolling
         setTimeout(function () {
-          root.classList.remove('is-loading', 'is-ready');
-          el.remove();
-        }, 950);
-      }, 320);
+          loader.classList.add('is-gone');
+          window.dispatchEvent(new Event('loaderdone'));
+        }, 1100);
+      }, 450);
     }
-    function frame(now) {
-      var t = now - t0;
-      var target = (loaded && t >= MIN) ? 100 : Math.min(92, 92 * (1 - Math.exp(-t / (MIN * 0.45 + 1))));
-      prog += (target - prog) * 0.09;
-      if (target === 100 && prog > 99.4) prog = 100;
-      bar.style.setProperty('--p', (prog / 100).toFixed(4));
-      pct.textContent = Math.round(prog);
-      if (prog >= 100) finish(); else requestAnimationFrame(frame);
+
+    function tick(now) {
+      if (finished) return;
+      var t = now - startTime;
+      var target = (pageLoaded && t >= CONFIG.minTime) ? 1 : Math.min(0.92, (t / CONFIG.minTime) * 0.92);
+      progress += (target - progress) * 0.07;
+      if (target === 1 && progress > 0.992) { finish(); return; }
+      setProgress(progress);
+      requestAnimationFrame(tick);
     }
-    requestAnimationFrame(frame);
+    requestAnimationFrame(tick);
+
+    setTimeout(finish, CONFIG.maxTime);   // safety net
   });
 })();

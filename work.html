@@ -2,7 +2,7 @@
 <!--
   =====================================================================
   GENSHIN-INSPIRED PORTFOLIO  —  PAGE 2 of 2: work.html
-  (Showcase + Contact.  Page 1 = index.html has Hero, About, Skills)
+  (Quest Log of student activities + Contact.  Page 1 = index.html has Hero, About, Journey, Activities)
   =====================================================================
   QUICK EDIT GUIDE (full details in README.md)
   1. Search this file for "[" to find every placeholder in [BRACKETS].
@@ -14,8 +14,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Work &amp; Contact — [YOUR NAME]</title>
-  <meta name="description" content="[Selected projects by YOUR NAME, and how to get in touch.]">
+  <title>Quest Log &amp; Contact — [YOUR NAME]</title>
+  <meta name="description" content="[Student activities, events and achievements of YOUR NAME, and how to get in touch.]">
   <meta name="theme-color" content="#0b0f1f">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,38 +24,52 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <script src="js/loader.js"></script>
   <script src="js/theme.js"></script>
-  <script src="js/scrollfx.js" defer></script>
+  <!-- loader.js also runs immediately so the loading screen shows from the first paint -->
+  <script src="js/loader.js"></script>
+  <script src="js/text-fx.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/meteors.js" defer></script>
   <script src="js/wind.js" defer></script>
+  <script src="js/scenery.js" defer></script>
+  <script src="js/traveler.js" defer></script>
   <script src="js/cursor.js" defer></script>
   <script src="js/card3d.js" defer></script>
-  <script src="js/puzzle.js" defer></script>
+  <script src="js/particles.js" defer></script>
+  <script src="js/scroll-fx.js" defer></script>
   <script src="js/showcase.js" defer></script>
   <script src="js/marquee.js" defer></script>
+  <script src="js/puzzle.js" defer></script>
 </head>
 
 <body>
-
-  <!-- ===== LOADING SCREEN (js/loader.js fills the bar and fades this out) ===== -->
-  <div id="loader" role="status" aria-live="polite" aria-label="Loading">
-    <div class="ld-sky" aria-hidden="true"></div>
-    <div class="ld-center">
-      <svg class="ld-emblem" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
-        <circle class="r1" cx="100" cy="100" r="92"/>
-        <circle class="r2" cx="100" cy="100" r="72"/>
-        <g class="orbit"><circle class="orb" cx="100" cy="8" r="4.5"/></g>
-        <path class="core" d="M100 52 110 90 148 100 110 110 100 148 90 110 52 100 90 90Z"/>
+  <!-- ===== LOADING SCREEN (Genshin-style). loader.js fills the tip + progress.
+       EDIT: the name, the subtitle, and the tips (data-tips, separated by | ) ===== -->
+  <div id="loader" role="status" aria-live="polite" aria-label="Loading"
+       data-tips="Every club you join is a new party member. Build a team that covers each other's weak spots.|Leveling up isn't only grades: events, volunteering and leadership all count as EXP.|Stuck on a project? Ask a teammate. Co-op is always stronger than solo.|Even travelers need to restore HP between exams. Rest is part of the quest.|Hover a quest card to pull it from the deck, then click it to read the whole story.|Use the sun / moon button in the menu to switch between day and night mode.">
+    <div class="loader-bg" aria-hidden="true"></div>
+    <div class="loader-center">
+      <svg class="loader-emblem" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+        <g class="em-ring--out"><circle cx="100" cy="100" r="94"/><circle class="em-ticks" cx="100" cy="100" r="86"/></g>
+        <g class="em-ring--mid">
+          <circle cx="100" cy="100" r="68"/>
+          <path class="em-dia" d="M100 26 106 32 100 38 94 32Z"/><path class="em-dia" d="M100 162 106 168 100 174 94 168Z"/>
+          <path class="em-dia" d="M26 100 32 94 38 100 32 106Z"/><path class="em-dia" d="M162 100 168 94 174 100 168 106Z"/>
+        </g>
+        <path class="em-star" d="M100 40 112 88 160 100 112 112 100 160 88 112 40 100 88 88Z"/>
+        <path class="em-star em-star--small" d="M100 72 105 95 128 100 105 105 100 128 95 105 72 100 95 95Z"/>
+        <circle class="em-core" cx="100" cy="100" r="4"/>
       </svg>
-      <p class="ld-name">[YOUR NAME]</p>
-      <p class="ld-sub">Portfolio</p>
+      <p class="loader-title">[YOUR NAME]</p>
+      <p class="loader-sub">Student Portfolio · [YOUR SCHOOL]</p>
     </div>
-    <div class="ld-bottom">
-      <p class="ld-tip" id="ld-tip">Tip: Hover over cards to make them lean toward you.</p>
-      <div class="ld-bar" id="ld-bar"><i></i><b></b></div>
-      <p class="ld-pct"><span id="ld-pct">0</span>%</p>
+    <div class="loader-bottom">
+      <p class="loader-tip"><span>Tips</span><b id="loader-tip"></b></p>
+      <div class="loader-bar" aria-hidden="true"><i></i><b></b></div>
+      <div class="loader-status">
+        <span class="ls-left"><i class="loader-spin" aria-hidden="true"></i><span id="loader-text">Loading</span></span>
+        <em id="loader-pct">0%</em>
+      </div>
     </div>
   </div>
   <a class="skip-link" href="#showcase">Skip to content</a>
@@ -65,22 +79,6 @@
   <div id="bg-constellation" aria-hidden="true"></div>
   <div id="bg-clouds" aria-hidden="true"></div>
   <div id="bg-scenery" aria-hidden="true"></div>
-  <!-- LIGHT mode only: the windmill on the hill (fan spins, tower sways) -->
-  <div id="bg-windmill" aria-hidden="true">
-    <svg viewBox="0 0 120 170" focusable="false">
-      <path d="M38 164 46 74h28l8 90Z" fill="#f6efdc" stroke="#d4a64a" stroke-width="1.5"/>
-      <path d="M42 74 60 52l18 22Z" fill="#42a8b8" stroke="#d4a64a" stroke-width="1.2"/>
-      <rect x="55" y="132" width="10" height="32" rx="5" fill="#d9c89a"/>
-      <rect x="55" y="90" width="10" height="14" rx="2" fill="#9fd8ea"/>
-      <g class="wm-fan" fill="#fffaf0" stroke="#d4a64a" stroke-width="1.1">
-        <g><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
-        <g transform="rotate(90 60 66)"><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
-        <g transform="rotate(180 60 66)"><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
-        <g transform="rotate(270 60 66)"><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
-      </g>
-      <circle cx="60" cy="66" r="5" fill="#d4a64a"/>
-    </svg>
-  </div>
   <canvas id="meteor-canvas" aria-hidden="true"></canvas>
   <canvas id="wind-canvas" aria-hidden="true"></canvas>
   <div id="bg-vignette" aria-hidden="true"></div>
@@ -96,8 +94,9 @@
       <nav id="nav-menu" class="nav-links" aria-label="Main">
         <a href="index.html">Home</a>
         <a href="index.html#about">About</a>
-        <a href="index.html#skills">Skills</a>
-        <a href="#showcase" class="is-active">Work</a>
+        <a href="index.html#journey">Journey</a>
+        <a href="index.html#skills">Activities</a>
+        <a href="#showcase" class="is-active">Quest Log</a>
         <a href="#contact">Contact</a>
       </nav>
 
@@ -119,104 +118,136 @@
       <div class="container">
         <header class="section-head section-head--row reveal">
           <div>
-            <p class="eyebrow">✦ Showcase</p>
-            <h2 id="showcase-title">Chronicles of Past Journeys</h2>
+            <p class="eyebrow">✦ Quest Log</p>
+            <h2 id="showcase-title" data-split>Chronicles of Student Adventures</h2>
           </div>
           <div class="showcase-controls">
-            <button class="arrow-btn" type="button" data-prev aria-label="Previous projects">
+            <button class="arrow-btn" type="button" data-prev aria-label="Previous activities">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4 7 12l8 8" /></svg>
             </button>
-            <button class="arrow-btn" type="button" data-next aria-label="Next projects">
+            <button class="arrow-btn" type="button" data-next aria-label="Next activities">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 4 8 8-8 8" /></svg>
             </button>
           </div>
         </header>
       </div>
 
+      <p class="showcase-hint">Hover a card to pull it from the deck · click it to read the full quest ✦</p>
+
       <div class="showcase-viewport" id="showcase-row-1" data-row data-speed="40"
            tabindex="0" role="region" aria-roledescription="carousel"
-           aria-label="Projects carousel. Use the left and right arrow keys to scroll.">
+           aria-label="Student activities carousel. Use the left and right arrow keys to scroll.">
         <ul class="showcase-track">
 
-          <!-- Each <li class="project-slot"> is one card. Copy one to add more. -->
+          <!-- Each <li class="project-slot"> is one quest card. Copy one to add more.
+               IMAGE: replace the placeholder text in .project-thumb with <img src="images/activity-1.jpg" alt="[Describe the photo]">
+               TAG = category chip, stars = how big a highlight it was (3 to 5). -->
           <li class="project-slot">
-            <article class="project-card panel">
-              <!-- IMAGE: replace the thumb contents with <img src="images/project-1.jpg" alt="[Describe project 1]"> -->
-              <div class="project-thumb"><span>[PROJECT IMAGE 1]</span></div>
+            <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
+              <div class="project-thumb">
+                <span class="project-tag">LEADERSHIP</span>
+                <span>[PHOTO 1]</span>
+                <span class="rarity" aria-hidden="true">★★★★★</span>
+              </div>
               <div class="project-body">
-                <h3>[Project Title 1]</h3>
-                <p>[One or two sentences describing this project and your role.]</p>
-                <!-- 🔗 YOUR LINK: change the href below -->
-                <a class="btn btn--small" href="https://example.com/[project-1]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+                <h3>[Student Council / Org Officer]</h3>
+                <span class="project-meta">[Your Position] · [School Year]</span>
+                <p>[What you led, who you worked with, and the result. One or two sentences.]</p>
+                <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
+                <a class="btn btn--small" href="https://example.com/[activity-1]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
               </div>
             </article>
           </li>
 
           <li class="project-slot">
-            <article class="project-card panel">
-              <div class="project-thumb"><span>[PROJECT IMAGE 2]</span></div>
+            <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
+              <div class="project-thumb">
+                <span class="project-tag">COMPETITION</span>
+                <span>[PHOTO 2]</span>
+                <span class="rarity" aria-hidden="true">★★★★★</span>
+              </div>
               <div class="project-body">
-                <h3>[Project Title 2]</h3>
-                <p>[One or two sentences describing this project and your role.]</p>
-                <!-- 🔗 YOUR LINK -->
-                <a class="btn btn--small" href="https://example.com/[project-2]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+                <h3>[Contest / Hackathon / Quiz Bee Name]</h3>
+                <span class="project-meta">[Placement or Award] · [Year]</span>
+                <p>[What the challenge was, your role in the team, and what you won or learned.]</p>
+                <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
+                <a class="btn btn--small" href="https://example.com/[activity-2]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
               </div>
             </article>
           </li>
 
           <li class="project-slot">
-            <article class="project-card panel">
-              <div class="project-thumb"><span>[PROJECT IMAGE 3]</span></div>
+            <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
+              <div class="project-thumb">
+                <span class="project-tag">VOLUNTEER</span>
+                <span>[PHOTO 3]</span>
+                <span class="rarity" aria-hidden="true">★★★★</span>
+              </div>
               <div class="project-body">
-                <h3>[Project Title 3]</h3>
-                <p>[One or two sentences describing this project and your role.]</p>
-                <!-- 🔗 YOUR LINK -->
-                <a class="btn btn--small" href="https://example.com/[project-3]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+                <h3>[Outreach / Community Project]</h3>
+                <span class="project-meta">[Your Role] · [Month Year]</span>
+                <p>[Who you helped, what the team did, and how many people it reached.]</p>
+                <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
+                <a class="btn btn--small" href="https://example.com/[activity-3]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
               </div>
             </article>
           </li>
 
           <li class="project-slot">
-            <article class="project-card panel">
-              <div class="project-thumb"><span>[PROJECT IMAGE 4]</span></div>
+            <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
+              <div class="project-thumb">
+                <span class="project-tag">CLUB</span>
+                <span>[PHOTO 4]</span>
+                <span class="rarity" aria-hidden="true">★★★★</span>
+              </div>
               <div class="project-body">
-                <h3>[Project Title 4]</h3>
-                <p>[One or two sentences describing this project and your role.]</p>
-                <!-- 🔗 YOUR LINK -->
-                <a class="btn btn--small" href="https://example.com/[project-4]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+                <h3>[Club / Organization Name]</h3>
+                <span class="project-meta">[Member / Officer] · [Years Active]</span>
+                <p>[What the club does, what you contributed, and your favorite memory.]</p>
+                <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
+                <a class="btn btn--small" href="https://example.com/[activity-4]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
               </div>
             </article>
           </li>
 
           <li class="project-slot">
-            <article class="project-card panel">
-              <div class="project-thumb"><span>[PROJECT IMAGE 5]</span></div>
+            <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
+              <div class="project-thumb">
+                <span class="project-tag">EVENT</span>
+                <span>[PHOTO 5]</span>
+                <span class="rarity" aria-hidden="true">★★★★★</span>
+              </div>
               <div class="project-body">
-                <h3>[Project Title 5]</h3>
-                <p>[One or two sentences describing this project and your role.]</p>
-                <!-- 🔗 YOUR LINK -->
-                <a class="btn btn--small" href="https://example.com/[project-5]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+                <h3>[Event You Organized or Joined]</h3>
+                <span class="project-meta">[Committee / Role] · [Month Year]</span>
+                <p>[What happened at the event, your part in making it work, and how it went.]</p>
+                <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
+                <a class="btn btn--small" href="https://example.com/[activity-5]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
               </div>
             </article>
           </li>
 
           <li class="project-slot">
-            <article class="project-card panel">
-              <div class="project-thumb"><span>[PROJECT IMAGE 6]</span></div>
+            <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
+              <div class="project-thumb">
+                <span class="project-tag">ACADEMIC</span>
+                <span>[PHOTO 6]</span>
+                <span class="rarity" aria-hidden="true">★★★</span>
+              </div>
               <div class="project-body">
-                <h3>[Project Title 6]</h3>
-                <p>[One or two sentences describing this project and your role.]</p>
-                <!-- 🔗 YOUR LINK -->
-                <a class="btn btn--small" href="https://example.com/[project-6]" target="_blank" rel="noopener">View project <span aria-hidden="true">→</span></a>
+                <h3>[Research / Seminar / Showcase]</h3>
+                <span class="project-meta">[Your Role] · [Year]</span>
+                <p>[The topic, what you built or presented, and what you took away from it.]</p>
+                <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
+                <a class="btn btn--small" href="https://example.com/[activity-6]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
               </div>
             </article>
           </li>
-
         </ul>
       </div>
     </section>
 
-    <div class="star-divider" aria-hidden="true"><span></span><i></i><span></span></div>
+    <div class="star-divider reveal" aria-hidden="true"><span></span><i></i><span></span></div>
 
     <!-- =================== 5. CONTACT + PASSING-BY TEXT =================== -->
     <section class="contact" id="contact" aria-labelledby="contact-title">
@@ -237,15 +268,15 @@
       </div>
 
       <!-- 3D floating contact card -->
-      <div class="scene3d contact-scene fd-1">
+      <div class="scene3d contact-scene fd-1 reveal" data-puzzle>
         <div class="float3d">
           <div class="tilt3d" data-tilt-card>
             <span class="plate plate--2" aria-hidden="true"></span>
             <span class="plate plate--1" aria-hidden="true"></span>
             <div class="contact-card panel">
               <p class="eyebrow">✦ Contact</p>
-              <h2 id="contact-title">Begin a New Journey</h2>
-              <p>[A short message inviting people to reach out — collaborations, jobs, or just to say hello.]</p>
+              <h2 id="contact-title">Join My Party</h2>
+              <p>[A short invitation: looking for teammates, org partnerships, speaking invites, or just a friendly hello from fellow students.]</p>
 
               <!-- 🔗 YOUR LINKS: change each href (the link) AND the [text] shown under the name -->
               <ul class="contact-links">
@@ -260,6 +291,11 @@
           </div>
         </div>
         <span class="ground-shadow" aria-hidden="true"></span>
+      </div>
+
+      <!-- Solve button: puzzle.js shows it (it stays hidden if the puzzle can't run, e.g. reduced motion) -->
+      <div class="puzzle-controls reveal" hidden>
+        <button class="btn" type="button" data-puzzle-solve><span class="pz-label">✦ Solve the puzzle</span></button>
       </div>
 
       <div class="marquee-rows" aria-hidden="true">

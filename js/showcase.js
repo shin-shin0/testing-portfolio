@@ -1,18 +1,21 @@
 /* =====================================================================
-   showcase.js — auto-sliding, infinitely looping project carousel
+   showcase.js — project cards: auto-sliding belt + "pull out" + "present"
    =====================================================================
    WHAT IT DOES
-   - Slides the project cards continuously and seamlessly (the card
-     set is cloned as many times as needed, so there is no visible jump).
-   - Pauses on hover, keyboard focus and touch; drag/swipe to scroll
-     manually (with a little momentum), then auto-sliding resumes.
+   - The project cards slide slowly and loop forever (the set is cloned
+     so there is no visible jump). They overlap a little, like a hand
+     of playing cards.
+   - Hover a card: it is pulled up and out of the stack (CSS), and the
+     belt pauses.
+   - CLICK a card (or press Enter on it): it flies out of the stack and
+     is presented big in the middle of the screen while the rest of the
+     page blurs. Click outside, press Esc or the X to put it back.
+     (Links inside a card still work.)
+   - Drag / swipe to scroll by hand (with momentum); auto-sliding
+     resumes afterwards. Prev/Next buttons and Left/Right arrow keys work.
    - Cards near the centre scale up and glow.
-   - Prev/Next buttons and Left/Right arrow keys (when the carousel
-     is focused). Tabbing to a card link scrolls it to the centre.
-   - Row 2 is an automatic reversed copy of row 1 (delete it in the
-     HTML if you don't want it). Speed per row: data-speed (px/second).
-   - Reduced motion: no auto-slide, manual controls still work.
-   EDIT HERE: CONFIG below, and the cards in index.html.
+   - Reduced motion: no auto-slide; everything else still works.
+   EDIT HERE: the CONFIG object below, and the cards in work.html.
    ===================================================================== */
 (function () {
   'use strict';
@@ -24,14 +27,17 @@
 
   /* ---------- CONFIG ---------- */
   var CONFIG = {
-    maxScale: 0.07,          // extra scale for the card at the centre (0.07 = +7%)
+    maxScale: 0.06,          // extra scale for the card at the centre (0.06 = +6%)
     focusZone: 0.3,          // how wide the "centre" zone is (fraction of viewport width)
     resumeDelayMouse: 800,   // ms before auto-slide resumes after releasing a drag
     resumeDelayTouch: 1500,
-    friction: 0.04           // momentum decay after a drag (lower = stops sooner)
+    friction: 0.04,          // momentum decay after a drag (lower = stops sooner)
+    presentScale: 2,         // biggest zoom when a card is presented
+    presentMs: 760           // how long the fly-out takes
   };
 
-  var modalOpen = false;   // true while a card is presented (belt pauses)
+  var presenting = false;    // true while a card is presented (belt pauses)
+
   function mod(n, m) { return ((n % m) + m) % m; }
 
   /* ---------- One carousel row ---------- */
@@ -50,38 +56,16 @@
     this.dragging = false;
     this.resumeAt = 0;
     this.setW = 0; this.vw = 0; this.slotW = 0; this.step = 0;
-    this.base = [];
+    this.base = Array.prototype.slice.call(this.track.children);
     this.slots = [];
     this.lefts = [];
-
-    // Row 2: build a reversed copy of another row's cards
-    var mirrorSel = viewport.getAttribute('data-mirror');
-    var source = mirrorSel && document.querySelector(mirrorSel);
-    if (source) {
-      // Only the original cards (not the loop clones), in reverse order
-      var items = Array.prototype.slice.call(source.querySelectorAll('.showcase-track > .project-slot:not([data-clone])')).reverse();
-      items.forEach(function (li) {
-        var copy = li.cloneNode(true);
-        copy.removeAttribute('style');
-        this.track.appendChild(copy);
-      }, this);
-      this.makeInert(this.track);
-    }
-    this.base = Array.prototype.slice.call(this.track.children);
 
     this.measure();
     this.bind();
   }
 
-  // Remove duplicated content from tab order / screen readers
-  Row.prototype.makeInert = function (el) {
-    Array.prototype.forEach.call(el.querySelectorAll('a, button, input'), function (n) { n.tabIndex = -1; });
-    if (el.nodeType === 1 && el !== this.track) el.setAttribute('aria-hidden', 'true');
-  };
-
   Row.prototype.measure = function () {
     var track = this.track;
-    // Reset: remove old clones
     Array.prototype.slice.call(track.querySelectorAll('[data-clone]')).forEach(function (n) { n.remove(); });
     track.style.marginLeft = '0px';
 
@@ -90,14 +74,14 @@
     if (!first) return;
     this.slotW = first.offsetWidth;
 
-    // Add one clone set to learn the exact set width (cards + gaps)
     var self = this;
     function addSet() {
       self.base.forEach(function (li) {
         var c = li.cloneNode(true);
         c.setAttribute('data-clone', '');
         c.setAttribute('aria-hidden', 'true');
-        Array.prototype.forEach.call(c.querySelectorAll('a, button'), function (n) { n.tabIndex = -1; });
+        // the copies must not be reachable by keyboard
+        Array.prototype.forEach.call(c.querySelectorAll('a, button, [tabindex]'), function (n) { n.tabIndex = -1; });
         track.appendChild(c);
       });
     }
@@ -106,9 +90,8 @@
     this.setW = firstClone.offsetLeft - first.offsetLeft;
     this.step = this.setW / this.base.length;
 
-    // Enough sets to cover the viewport on both sides of the wrap point
     var total = Math.ceil(this.vw / this.setW) + 2;
-    for (var i = 2; i < total; i++) addSet();     // base set + clones = total sets
+    for (var i = 2; i < total; i++) addSet();
     track.style.marginLeft = (-this.setW) + 'px';
 
     this.slots = Array.prototype.slice.call(track.children);
@@ -120,14 +103,13 @@
     var m = mod(this.pos, this.setW);
     this.track.style.transform = 'translate3d(' + (-m).toFixed(2) + 'px,0,0)';
 
-    // Centre scale + glow (screen x of card centre = left + w/2 - setW - m)
     var centre = this.vw / 2;
     var zone = this.vw * CONFIG.focusZone;
     for (var i = 0; i < this.slots.length; i++) {
       var cx = this.lefts[i] + this.slotW / 2 - this.setW - m;
       var slot = this.slots[i];
       if (cx < -this.slotW || cx > this.vw + this.slotW) {
-        if (slot._k !== 0) { slot.style.transform = ''; slot.style.setProperty('--glow', '0'); slot._k = 0; }
+        if (slot._k !== 0) { slot.style.transform = ''; slot.style.zIndex = ''; slot.style.setProperty('--glow', '0'); slot._k = 0; }
         continue;
       }
       var k = Math.max(0, 1 - Math.abs(cx - centre) / zone);
@@ -135,6 +117,7 @@
       if (slot._k === k) continue;
       slot._k = k;
       slot.style.transform = 'scale(' + (1 + CONFIG.maxScale * k).toFixed(3) + ')';
+      slot.style.zIndex = String(Math.round(k * 10));          // the card in the middle sits in front
       slot.style.setProperty('--glow', k.toString());
     }
   };
@@ -142,7 +125,7 @@
   Row.prototype.nudge = function (px) { this.pending += px; this.vel = 0; };
 
   Row.prototype.tick = function (dt, now) {
-    var paused = modalOpen || this.hover || this.focus || this.touching || this.dragging || now < this.resumeAt;
+    var paused = presenting || this.hover || this.focus || this.touching || this.dragging || now < this.resumeAt;
     this.factor += ((paused ? 0 : 1) - this.factor) * Math.min(1, dt * 4);
 
     var move = this.dir * this.speed * this.factor * dt;
@@ -209,23 +192,32 @@
     vp.addEventListener('pointerup', end);
     vp.addEventListener('pointercancel', end);
 
-    // A drag must not trigger a link click
+    // A drag must not count as a click (neither a link click nor "present this card")
     vp.addEventListener('click', function (e) {
       if (suppressClick) { e.preventDefault(); e.stopPropagation(); }
     }, true);
     vp.addEventListener('dragstart', function (e) { e.preventDefault(); });
 
+    // Click on a card (not on its link) = present it
+    vp.addEventListener('click', function (e) {
+      if (e.target.closest('a, button')) return;
+      var card = e.target.closest('.project-card');
+      if (card) presentCard(card, false);
+    });
+
     // Keyboard
     vp.addEventListener('keydown', function (e) {
       if (e.key === 'ArrowRight') { e.preventDefault(); self.nudge(self.step); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); self.nudge(-self.step); }
+      else if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('project-card')) {
+        e.preventDefault(); presentCard(e.target, true);
+      }
     });
     vp.addEventListener('focusin', function (e) {
       self.focus = true;
-      // Bring a focused card's link to the centre
       var slot = e.target.closest && e.target.closest('.project-slot');
       var idx = slot ? self.slots.indexOf(slot) : -1;
-      if (idx > -1) {
+      if (idx > -1 && !presenting) {
         var cx = self.lefts[idx] + self.slotW / 2 - self.setW - mod(self.pos, self.setW);
         self.pending = cx - self.vw / 2;
       }
@@ -235,7 +227,7 @@
     });
   };
 
-  /* ---------- Set up all rows ---------- */
+  /* ---------- Set up the rows ---------- */
   var rows = Array.prototype.slice.call(root.querySelectorAll('[data-row]')).map(function (v) { return new Row(v); });
 
   var prev = root.querySelector('[data-prev]');
@@ -246,84 +238,116 @@
 
   var rt;
   function remeasure() { rows.forEach(function (r) { r.measure(); }); }
-  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(remeasure, 150); });
+  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (!presenting) remeasure(); }, 150); });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
 
-  /* ---------- Click a card: it is pulled out of the deck and presented; the page blurs behind it ---------- */
-  var pulled = null;
-  var X_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5l14 14M19 5 5 19"/></svg>';
-  function fitTo(w, h) {
-    var s = Math.min(1.6, innerHeight * 0.84 / h, innerWidth * 0.92 / w);
-    return 'translate3d(' + ((innerWidth - w * s) / 2).toFixed(1) + 'px,' + ((innerHeight - h * s) / 2).toFixed(1) + 'px,0) scale(' + s.toFixed(3) + ')';
+  /* =====================================================================
+     PRESENT A CARD: it flies out of the belt into the middle of the
+     screen, the page behind it blurs
+     ===================================================================== */
+  var stage = null, closeBtn = null, current = null;
+
+  function ensureStage() {
+    if (stage) return;
+    stage = document.createElement('div');
+    stage.className = 'card-stage';
+    stage.setAttribute('role', 'dialog');
+    stage.setAttribute('aria-modal', 'true');
+    stage.setAttribute('aria-label', 'Project details');
+    stage.innerHTML =
+      '<button class="stage-close" type="button" aria-label="Close project">✕</button>' +
+      '<p class="stage-hint">Click anywhere outside the card or press Esc to put it back</p>';
+    document.body.appendChild(stage);
+    closeBtn = stage.querySelector('.stage-close');
+
+    closeBtn.addEventListener('click', function () { closeCard(true); });
+    stage.addEventListener('click', function (e) {
+      if (!e.target.closest('.stage-card')) closeCard(false);   // click on the blurred background
+    });
   }
-  function fromRect(r, w) {
-    return 'translate3d(' + r.left.toFixed(1) + 'px,' + r.top.toFixed(1) + 'px,0) scale(' + (r.width / w).toFixed(3) + ')';
-  }
-  function openCard(card) {
-    if (pulled || modalOpen) return;
-    var slot = card.closest('.project-slot');
-    var w = card.offsetWidth, h = card.offsetHeight, r = card.getBoundingClientRect();
-    var back = document.createElement('div'); back.className = 'card-backdrop';
-    var pull = card.cloneNode(true);
-    pull.classList.add('card-pull');
-    pull.removeAttribute('tabindex'); pull.removeAttribute('aria-haspopup'); pull.removeAttribute('aria-hidden');
-    pull.setAttribute('role', 'dialog'); pull.setAttribute('aria-modal', 'true');
-    var title = pull.querySelector('h3'); if (title) pull.setAttribute('aria-label', title.textContent);
-    pull.style.width = w + 'px'; pull.style.height = h + 'px'; pull.style.transform = fromRect(r, w);   // starts exactly where the card sits
-    var x = document.createElement('button');
-    x.type = 'button'; x.className = 'arrow-btn card-x'; x.setAttribute('aria-label', 'Close project'); x.innerHTML = X_ICON;
-    document.body.appendChild(back); document.body.appendChild(pull); document.body.appendChild(x);
-    pulled = { card: card, slot: slot, back: back, pull: pull, x: x, w: w, h: h };
-    modalOpen = true;
-    if (slot) slot.classList.add('is-pulled');
-    document.documentElement.classList.add('modal-open');
-    requestAnimationFrame(function () { requestAnimationFrame(function () {
-      back.classList.add('is-open'); x.classList.add('is-open'); pull.classList.add('is-presented');
-      pull.style.transform = fitTo(w, h);
-    }); });
-    back.addEventListener('click', closeCard);
-    x.addEventListener('click', closeCard);
-    x.focus({ preventScroll: true });
-  }
-  function closeCard() {
-    if (!pulled) return;
-    var p = pulled; pulled = null;
-    var r = p.card.getBoundingClientRect(), done = false;
-    p.back.classList.remove('is-open'); p.x.classList.remove('is-open'); p.pull.classList.remove('is-presented');
-    p.pull.style.transform = fromRect(r, p.w);   // slides back into the deck
-    function end() {
-      if (done) return; done = true;
-      p.back.remove(); p.pull.remove(); p.x.remove();
-      if (p.slot) p.slot.classList.remove('is-pulled');
-      document.documentElement.classList.remove('modal-open');
-      modalOpen = false;
-      try { p.card.focus({ preventScroll: true }); } catch (err) { /* ignore */ }
+
+  function presentCard(cardEl, byKeyboard) {
+    if (presenting || current) return;
+    ensureStage();
+
+    var slot = cardEl.closest('.project-slot');
+    var r = cardEl.getBoundingClientRect();
+    var vw = window.innerWidth, vh = window.innerHeight;
+
+    // a copy of the card, placed exactly over the original
+    var wrap = document.createElement('div');
+    wrap.className = 'stage-card';
+    wrap.style.left = r.left + 'px'; wrap.style.top = r.top + 'px';
+    wrap.style.width = r.width + 'px'; wrap.style.height = r.height + 'px';
+    var copy = cardEl.cloneNode(true);
+    copy.removeAttribute('tabindex');
+    copy.removeAttribute('aria-haspopup');
+    Array.prototype.forEach.call(copy.querySelectorAll('a'), function (a) { a.tabIndex = 0; });
+    wrap.appendChild(copy);
+    stage.insertBefore(wrap, closeBtn);
+
+    var s = Math.min(CONFIG.presentScale, (vh * 0.8) / r.height, (vw * 0.9) / r.width);
+    s = Math.max(1, s);
+    var dx = vw / 2 - (r.left + r.width / 2);
+    var dy = vh / 2 - (r.top + r.height / 2);
+    var finalT = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(' + s.toFixed(3) + ')';
+
+    current = { slot: slot, card: cardEl, wrap: wrap, finalT: finalT, byKeyboard: byKeyboard };
+    presenting = true;
+    slot.classList.add('is-lifted');
+    document.documentElement.classList.add('stage-open');
+    stage.classList.add('is-open');
+
+    var tilt = 'rotate(' + (parseFloat(getComputedStyle(cardEl).rotate) || 0) + 'deg)';
+    wrap.style.transform = finalT;
+    if (wrap.animate && !reduce) {
+      var a = wrap.animate([
+        { transform: 'translate(0,0) scale(1) ' + tilt + ' rotateY(0deg)' },
+        { transform: 'translate(' + dx.toFixed(1) + 'px,' + (dy - 30).toFixed(1) + 'px) scale(' + (s * 1.07).toFixed(3) + ') rotateY(-16deg)', offset: 0.7 },
+        { transform: finalT + ' rotateY(0deg)' }
+      ], { duration: CONFIG.presentMs, easing: 'cubic-bezier(.2,.9,.25,1)' });
+      a.onfinish = a.oncancel = function () { wrap.style.transform = finalT; };
     }
-    p.pull.addEventListener('transitionend', function (e) { if (e.propertyName === 'transform') end(); });
-    setTimeout(end, 950);
+    closeBtn.focus({ preventScroll: true });
   }
-  Array.prototype.forEach.call(root.querySelectorAll('[data-row] .project-slot:not([data-clone]) .project-card'), function (c) {
-    c.tabIndex = 0; c.setAttribute('aria-haspopup', 'dialog');
-  });
-  root.addEventListener('click', function (e) {
-    var card = e.target.closest('.project-card');
-    if (!card || e.target.closest('a, button')) return;
-    openCard(card);
-  });
-  root.addEventListener('keydown', function (e) {
-    if ((e.key === 'Enter' || e.key === ' ') && e.target.classList && e.target.classList.contains('project-card')) { e.preventDefault(); openCard(e.target); }
-  });
+
+  function closeCard(fromButton) {
+    if (!current) return;
+    var c = current;
+    current = 'closing';
+    stage.classList.remove('is-open');
+
+    function done() {
+      c.wrap.remove();
+      c.slot.classList.remove('is-lifted');
+      document.documentElement.classList.remove('stage-open');
+      presenting = false;
+      current = null;
+      rows.forEach(function (row) { row.resumeAt = performance.now() + 600; });
+      if (c.byKeyboard) { try { c.card.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
+    }
+    if (c.wrap.animate && !reduce) {
+      var a = c.wrap.animate([
+        { transform: c.finalT },
+        { transform: 'translate(0,0) scale(1)' }
+      ], { duration: 480, easing: 'cubic-bezier(.5,0,.25,1)', fill: 'forwards' });
+      a.onfinish = done;
+    } else {
+      done();
+    }
+  }
+
   document.addEventListener('keydown', function (e) {
-    if (!pulled) return;
-    if (e.key === 'Escape') closeCard();
-    else if (e.key === 'Tab') {   // keep keyboard focus on the presented card
-      var items = [pulled.x].concat(Array.prototype.slice.call(pulled.pull.querySelectorAll('a')));
-      var i = items.indexOf(document.activeElement);
-      e.preventDefault();
-      items[(i + (e.shiftKey ? items.length - 1 : 1)) % items.length].focus();
+    if (e.key === 'Escape' && current && current !== 'closing') closeCard(false);
+    // keep Tab inside the presented card
+    if (e.key === 'Tab' && current && current !== 'closing') {
+      var f = Array.prototype.slice.call(stage.querySelectorAll('a, button'));
+      if (!f.length) return;
+      var first = f[0], lastEl = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); lastEl.focus(); }
+      else if (!e.shiftKey && document.activeElement === lastEl) { e.preventDefault(); first.focus(); }
     }
   });
-  window.addEventListener('resize', function () { if (pulled) closeCard(); });
 
   /* ---------- Shared animation loop (runs only while visible) ---------- */
   var running = false, visible = true, rafId = 0, last = 0;

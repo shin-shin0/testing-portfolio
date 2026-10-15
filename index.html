@@ -2,7 +2,7 @@
 <!--
   =====================================================================
   GENSHIN-INSPIRED PORTFOLIO  —  PAGE 1 of 2: index.html
-  (Hero, About, Skills.  Page 2 = work.html has Showcase + Contact)
+  (Hero, About, Journey, Activities.  Page 2 = work.html has the Quest Log + Contact)
   =====================================================================
   QUICK EDIT GUIDE (full details in README.md)
   1. Search this file for "[" to find every placeholder in [BRACKETS].
@@ -15,8 +15,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>[YOUR NAME] — [YOUR TITLE] Portfolio</title>
-  <meta name="description" content="[One-sentence description of you and your work.]">
+  <title>[YOUR NAME] — [YOUR COURSE] Student Portfolio</title>
+  <meta name="description" content="[One sentence about you: your course, school, and the clubs, events and projects you are part of.]">
   <meta name="theme-color" content="#0b0f1f">
 
   <!-- Google Fonts: Cinzel (display serif) + Nunito (body sans) -->
@@ -27,37 +27,55 @@
   <link rel="stylesheet" href="style.css">
 
   <!-- theme.js runs immediately (no defer) so the saved light/dark choice is applied before the page paints -->
-  <script src="js/loader.js"></script>
   <script src="js/theme.js"></script>
-  <!-- Everything else is deferred: runs after the page is parsed -->
-  <script src="js/scrollfx.js" defer></script>
+  <!-- loader.js also runs immediately so the loading screen shows from the first paint -->
+  <script src="js/loader.js"></script>
+  <!-- Everything else is deferred: runs after the page is parsed (text-fx first: it splits text into letters) -->
+  <script src="js/text-fx.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/meteors.js" defer></script>
   <script src="js/wind.js" defer></script>
+  <script src="js/scenery.js" defer></script>
   <script src="js/cursor.js" defer></script>
   <script src="js/hero-tilt.js" defer></script>
   <script src="js/card3d.js" defer></script>
+  <script src="js/particles.js" defer></script>
+  <script src="js/scroll-fx.js" defer></script>
+  <script src="js/puzzle.js" defer></script>
+  <script src="js/marquee.js" defer></script>
+  <script src="js/showcase.js" defer></script>
+  <script src="js/text.js" defer></script>
+  <script src="js/theme.js" defer></script>
 </head>
 
 <body>
-
-  <!-- ===== LOADING SCREEN (js/loader.js fills the bar and fades this out) ===== -->
-  <div id="loader" role="status" aria-live="polite" aria-label="Loading">
-    <div class="ld-sky" aria-hidden="true"></div>
-    <div class="ld-center">
-      <svg class="ld-emblem" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
-        <circle class="r1" cx="100" cy="100" r="92"/>
-        <circle class="r2" cx="100" cy="100" r="72"/>
-        <g class="orbit"><circle class="orb" cx="100" cy="8" r="4.5"/></g>
-        <path class="core" d="M100 52 110 90 148 100 110 110 100 148 90 110 52 100 90 90Z"/>
+  <!-- ===== LOADING SCREEN (Genshin-style). loader.js fills the tip + progress.
+       EDIT: the name, the subtitle, and the tips (data-tips, separated by | ) ===== -->
+  <div id="loader" role="status" aria-live="polite" aria-label="Loading"
+       data-tips="Every club you join is a new party member. Build a team that covers each other's weak spots.|Leveling up isn't only grades: events, volunteering and leadership all count as EXP.|Stuck on a project? Ask a teammate. Co-op is always stronger than solo.|Even travelers need to restore HP between exams. Rest is part of the quest.|Hover a quest card to pull it from the deck, then click it to read the whole story.|Use the sun / moon button in the menu to switch between day and night mode.">
+    <div class="loader-bg" aria-hidden="true"></div>
+    <div class="loader-center">
+      <svg class="loader-emblem" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+        <g class="em-ring--out"><circle cx="100" cy="100" r="94"/><circle class="em-ticks" cx="100" cy="100" r="86"/></g>
+        <g class="em-ring--mid">
+          <circle cx="100" cy="100" r="68"/>
+          <path class="em-dia" d="M100 26 106 32 100 38 94 32Z"/><path class="em-dia" d="M100 162 106 168 100 174 94 168Z"/>
+          <path class="em-dia" d="M26 100 32 94 38 100 32 106Z"/><path class="em-dia" d="M162 100 168 94 174 100 168 106Z"/>
+        </g>
+        <path class="em-star" d="M100 40 112 88 160 100 112 112 100 160 88 112 40 100 88 88Z"/>
+        <path class="em-star em-star--small" d="M100 72 105 95 128 100 105 105 100 128 95 105 72 100 95 95Z"/>
+        <circle class="em-core" cx="100" cy="100" r="4"/>
       </svg>
-      <p class="ld-name">[YOUR NAME]</p>
-      <p class="ld-sub">Portfolio</p>
+      <p class="loader-title">[YOUR NAME]</p>
+      <p class="loader-sub">Student Portfolio · [YOUR SCHOOL]</p>
     </div>
-    <div class="ld-bottom">
-      <p class="ld-tip" id="ld-tip">Tip: Hover over cards to make them lean toward you.</p>
-      <div class="ld-bar" id="ld-bar"><i></i><b></b></div>
-      <p class="ld-pct"><span id="ld-pct">0</span>%</p>
+    <div class="loader-bottom">
+      <p class="loader-tip"><span>Tips</span><b id="loader-tip"></b></p>
+      <div class="loader-bar" aria-hidden="true"><i></i><b></b></div>
+      <div class="loader-status">
+        <span class="ls-left"><i class="loader-spin" aria-hidden="true"></i><span id="loader-text">Loading</span></span>
+        <em id="loader-pct">0%</em>
+      </div>
     </div>
   </div>
   <a class="skip-link" href="#about">Skip to content</a>
@@ -69,22 +87,6 @@
   <div id="bg-constellation" aria-hidden="true"></div>
   <div id="bg-clouds" aria-hidden="true"></div>
   <div id="bg-scenery" aria-hidden="true"></div>
-  <!-- LIGHT mode only: the windmill on the hill (fan spins, tower sways) -->
-  <div id="bg-windmill" aria-hidden="true">
-    <svg viewBox="0 0 120 170" focusable="false">
-      <path d="M38 164 46 74h28l8 90Z" fill="#f6efdc" stroke="#d4a64a" stroke-width="1.5"/>
-      <path d="M42 74 60 52l18 22Z" fill="#42a8b8" stroke="#d4a64a" stroke-width="1.2"/>
-      <rect x="55" y="132" width="10" height="32" rx="5" fill="#d9c89a"/>
-      <rect x="55" y="90" width="10" height="14" rx="2" fill="#9fd8ea"/>
-      <g class="wm-fan" fill="#fffaf0" stroke="#d4a64a" stroke-width="1.1">
-        <g><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
-        <g transform="rotate(90 60 66)"><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
-        <g transform="rotate(180 60 66)"><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
-        <g transform="rotate(270 60 66)"><rect x="58.5" y="12" width="3" height="54"/><rect x="61.5" y="14" width="13" height="22"/></g>
-      </g>
-      <circle cx="60" cy="66" r="5" fill="#d4a64a"/>
-    </svg>
-  </div>
   <canvas id="meteor-canvas" aria-hidden="true"></canvas>
   <canvas id="wind-canvas" aria-hidden="true"></canvas>
   <div id="bg-vignette" aria-hidden="true"></div>
@@ -100,8 +102,9 @@
       <nav id="nav-menu" class="nav-links" aria-label="Main">
         <a href="#hero" class="is-active">Home</a>
         <a href="#about">About</a>
-        <a href="#skills">Skills</a>
-        <a href="work.html#showcase">Work</a>
+        <a href="#journey">Journey</a>
+        <a href="#skills">Activities</a>
+        <a href="work.html#showcase">Quest Log</a>
         <a href="work.html#contact">Contact</a>
       </nav>
 
@@ -123,39 +126,46 @@
       <div class="hero-stage">
         <!-- [data-tilt] = the block that rotates in 3D. [data-depth] = per-layer parallax. -->
         <div class="hero-text" data-tilt>
-          <p class="hero-eyebrow" data-depth="30" data-move="-4">✦ [YOUR TITLE / ROLE] ✦</p>
+          <p class="hero-eyebrow" data-depth="30" data-move="-4">✦ [YOUR COURSE] STUDENT · [YEAR LEVEL] ✦</p>
 
-          <h1 class="hero-name">
+          <h1 class="hero-name" data-particles="26" data-particles-pad="30" data-particles-alpha="0.7">
             <!-- Depth duplicates (decorative). Keep the text identical to the main layer. -->
-            <span class="layer layer-shadow" aria-hidden="true" data-depth="-60" data-move="26">[YOUR NAME]</span>
-            <span class="layer layer-glow" aria-hidden="true" data-depth="-25" data-move="14">[YOUR NAME]</span>
-            <span class="layer layer-main" data-depth="40" data-move="-6">[YOUR NAME]</span>
+            <span class="layer layer-shadow" aria-hidden="true" data-wave data-depth="-60" data-move="26">[YOUR NAME]</span>
+            <span class="layer layer-glow" aria-hidden="true" data-wave data-depth="-25" data-move="14">[YOUR NAME]</span>
+            <span class="layer layer-main" data-wave data-depth="40" data-move="-6">[YOUR NAME]</span>
           </h1>
 
-          <p class="hero-tagline" data-depth="55" data-move="-8">[Your tagline — one line about what you create.]</p>
+          <p class="hero-tagline" data-depth="55" data-move="-8">[Student leader, club member and curious adventurer, collecting experiences one activity at a time.]</p>
+
+          <!-- Your "party members": 3 organizations, roles or achievements you want seen first -->
+          <ul class="hero-badges" data-depth="62" data-move="-9" aria-label="Highlights">
+            <li>[Organization / Club 1]</li>
+            <li>[Your Role or Position]</li>
+            <li>[Organization / Club 2]</li>
+          </ul>
 
           <!-- 🔗 BUTTON LINKS: both go to page 2. Change the href if you want them to open somewhere else. -->
           <div class="hero-cta" data-depth="70" data-move="-10">
-            <a class="btn btn--primary" href="work.html#showcase">View Work</a>
-            <a class="btn" href="work.html#contact">Contact</a>
+            <a class="btn btn--primary" href="work.html#showcase">Open My Quest Log</a>
+            <a class="btn" href="work.html#contact">Join My Party</a>
           </div>
         </div>
       </div>
     </section>
 
-    <div class="star-divider" aria-hidden="true"><span></span><i></i><span></span></div>
+    <div class="star-divider reveal" aria-hidden="true"><span></span><i></i><span></span></div>
 
     <!-- =================== 2. ABOUT =================== -->
     <section class="section" id="about" aria-labelledby="about-title">
       <div class="container">
         <header class="section-head reveal">
           <p class="eyebrow">✦ About</p>
-          <h2 id="about-title">The Traveler Behind the Work</h2>
+          <h2 id="about-title" data-split>The Student Behind the Activities</h2>
         </header>
 
         <div class="about-grid">
           <!-- 3D floating photo -->
-          <div class="scene3d photo-scene fd-1 reveal">
+          <div class="scene3d photo-scene fd-1 reveal" data-anim="left">
             <div class="float3d">
               <div class="tilt3d" data-tilt-card>
                 <span class="plate plate--2" aria-hidden="true"></span>
@@ -175,31 +185,31 @@
             <span class="ground-shadow" aria-hidden="true"></span>
           </div>
 
-          <div class="about-copy reveal">
-            <p class="lead">[A short, warm opening line about who you are and what drives you.]</p>
-            <p>[Bio paragraph one: your background, what you do, and the kind of problems you love solving.]</p>
-            <p>[Bio paragraph two: your approach, your values, and what you're exploring next.]</p>
+          <div class="about-copy reveal" data-anim="right">
+            <p class="lead">[One warm line: who you are as a student and what you love getting involved in.]</p>
+            <p>[Paragraph one: your course, school and year level, and what made you start joining clubs, events and competitions.]</p>
+            <p>[Paragraph two: the roles you have held, what they taught you about teamwork and leadership, and what you want to try next.]</p>
 
             <!-- 3D floating stat cards -->
             <ul class="stats" data-reveal-stagger>
               <li class="scene3d fd-2 reveal">
                 <div class="float3d"><div class="tilt3d" data-tilt-card>
                   <span class="plate plate--1" aria-hidden="true"></span>
-                  <div class="stat panel"><strong data-count="5" data-suffix="+">0</strong><span>[Years Experience]</span></div>
+                  <div class="stat panel"><strong data-count="6" data-suffix="">0</strong><span>[Organizations Joined]</span></div>
                 </div></div>
                 <span class="ground-shadow" aria-hidden="true"></span>
               </li>
               <li class="scene3d fd-3 reveal">
                 <div class="float3d"><div class="tilt3d" data-tilt-card>
                   <span class="plate plate--1" aria-hidden="true"></span>
-                  <div class="stat panel"><strong data-count="40" data-suffix="+">0</strong><span>[Projects Done]</span></div>
+                  <div class="stat panel"><strong data-count="40" data-suffix="+">0</strong><span>[Events &amp; Activities]</span></div>
                 </div></div>
                 <span class="ground-shadow" aria-hidden="true"></span>
               </li>
               <li class="scene3d fd-4 reveal">
                 <div class="float3d"><div class="tilt3d" data-tilt-card>
                   <span class="plate plate--1" aria-hidden="true"></span>
-                  <div class="stat panel"><strong data-count="12" data-suffix="">0</strong><span>[Happy Clients]</span></div>
+                  <div class="stat panel"><strong data-count="8" data-suffix="+">0</strong><span>[Awards &amp; Certificates]</span></div>
                 </div></div>
                 <span class="ground-shadow" aria-hidden="true"></span>
               </li>
@@ -209,55 +219,139 @@
       </div>
     </section>
 
-    <div class="star-divider" aria-hidden="true"><span></span><i></i><span></span></div>
+    <div class="star-divider reveal" aria-hidden="true"><span></span><i></i><span></span></div>
 
-    <!-- =================== 3. SKILLS (3 boxes) =================== -->
+    <!-- =================== 3. JOURNEY (student timeline) =================== -->
+    <!-- Each <li> is one chapter of your student life. Copy one to add more; edit the year, title and text. -->
+    <section class="section" id="journey" aria-labelledby="journey-title">
+      <div class="container">
+        <header class="section-head reveal">
+          <p class="eyebrow">✦ Journey</p>
+          <h2 id="journey-title" data-split>My Adventure Log</h2>
+        </header>
+
+        <ol class="journey">
+          <li class="journey-step reveal" data-anim="left">
+            <div class="journey-card panel">
+              <span class="journey-year">[School Year 1]</span>
+              <h3>[Chapter title: e.g. First Steps]</h3>
+              <p>[What you joined or started this year, and one thing you learned.]</p>
+            </div>
+          </li>
+          <li class="journey-step reveal" data-anim="right">
+            <div class="journey-card panel">
+              <span class="journey-year">[School Year 2]</span>
+              <h3>[Chapter title: e.g. Finding My Party]</h3>
+              <p>[A club, event or competition that changed how you work with others.]</p>
+            </div>
+          </li>
+          <li class="journey-step reveal" data-anim="left">
+            <div class="journey-card panel">
+              <span class="journey-year">[School Year 3]</span>
+              <h3>[Chapter title: e.g. Taking the Lead]</h3>
+              <p>[A leadership role or big project you took on, and what it achieved.]</p>
+            </div>
+          </li>
+          <li class="journey-step reveal" data-anim="right">
+            <div class="journey-card panel">
+              <span class="journey-year">[School Year 4 / Now]</span>
+              <h3>[Chapter title: e.g. The Next Horizon]</h3>
+              <p>[Where you are now and the next adventure you are heading toward.]</p>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <div class="star-divider reveal" aria-hidden="true"><span></span><i></i><span></span></div>
+
+    <!-- =================== 4. ACTIVITIES (3 floating 3D boxes with particles) =================== -->
     <section class="section" id="skills" aria-labelledby="skills-title">
       <div class="container">
         <header class="section-head reveal">
-          <p class="eyebrow">✦ Skills</p>
-          <h2 id="skills-title">Constellations of Craft</h2>
+          <p class="eyebrow">✦ Activities</p>
+          <h2 id="skills-title" data-split>Constellations of Student Life</h2>
         </header>
 
         <div class="skills-grid" data-reveal-stagger>
-          <div class="scene3d skill-scene fd-2 reveal"><div class="float3d"><div class="tilt3d" data-tilt-card><span class="plate plate--2" aria-hidden="true"></span><span class="plate plate--1" aria-hidden="true"></span><article class="skill-card panel">
-            <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
-              <polyline points="10,56 38,24 70,42 102,12 130,30"/>
-              <circle cx="10" cy="56" r="3"/><circle cx="38" cy="24" r="3.5"/><circle cx="70" cy="42" r="3"/><circle cx="102" cy="12" r="4"/><circle cx="130" cy="30" r="3"/>
-            </svg>
-            <h3>[Skill Group 1]</h3>
-            <p>[Short description of this skill area — what you do with it and how well you know it.]</p>
-          <span class="sheen" aria-hidden="true"></span></article><span class="depth-star depth-star--a" aria-hidden="true"></span></div></div><span class="ground-shadow" aria-hidden="true"></span></div>
+          <!-- Each box = .scene3d (floats + tilts toward the cursor) > .skill-card. Particles drift around it (data-particles). -->
+          <div class="scene3d fd-1 reveal" data-anim="rise">
+            <div class="float3d"><div class="tilt3d" data-tilt-card data-particles="12" data-particles-pad="34" data-particles-alpha="0.85">
+              <span class="plate plate--2" aria-hidden="true"></span>
+              <span class="plate plate--1" aria-hidden="true"></span>
+              <article class="skill-card panel">
+                <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
+                  <polyline points="10,56 38,24 70,42 102,12 130,30"/>
+                  <circle cx="10" cy="56" r="3"/><circle cx="38" cy="24" r="3.5"/><circle cx="70" cy="42" r="3"/><circle cx="102" cy="12" r="4"/><circle cx="130" cy="30" r="3"/>
+                </svg>
+                <h3>Leadership &amp; Organizations</h3>
+                <p>[The clubs, councils and committees you serve in, the positions you hold, and what you lead or help run.]</p>
+                <ul class="tag-list" aria-label="Examples">
+                  <li>[Position]</li><li>[Club / Org]</li><li>[Committee]</li>
+                </ul>
+                <span class="sheen" aria-hidden="true"></span>
+              </article>
+              <span class="depth-star depth-star--a" aria-hidden="true"></span>
+              <span class="depth-star depth-star--b" aria-hidden="true"></span>
+            </div></div>
+            <span class="ground-shadow" aria-hidden="true"></span>
+          </div>
 
-          <div class="scene3d skill-scene fd-3 reveal"><div class="float3d"><div class="tilt3d" data-tilt-card><span class="plate plate--2" aria-hidden="true"></span><span class="plate plate--1" aria-hidden="true"></span><article class="skill-card panel">
-            <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
-              <polyline points="12,20 44,50 76,18 108,48 132,16"/>
-              <circle cx="12" cy="20" r="3"/><circle cx="44" cy="50" r="3.5"/><circle cx="76" cy="18" r="4"/><circle cx="108" cy="48" r="3"/><circle cx="132" cy="16" r="3"/>
-            </svg>
-            <h3>[Skill Group 2]</h3>
-            <p>[Short description of this skill area — what you do with it and how well you know it.]</p>
-          <span class="sheen" aria-hidden="true"></span></article><span class="depth-star depth-star--a" aria-hidden="true"></span></div></div><span class="ground-shadow" aria-hidden="true"></span></div>
+          <div class="scene3d fd-2 reveal" data-anim="rise">
+            <div class="float3d"><div class="tilt3d" data-tilt-card data-particles="12" data-particles-pad="34" data-particles-alpha="0.85">
+              <span class="plate plate--2" aria-hidden="true"></span>
+              <span class="plate plate--1" aria-hidden="true"></span>
+              <article class="skill-card panel">
+                <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
+                  <polyline points="12,20 44,50 76,18 108,48 132,16"/>
+                  <circle cx="12" cy="20" r="3"/><circle cx="44" cy="50" r="3.5"/><circle cx="76" cy="18" r="4"/><circle cx="108" cy="48" r="3"/><circle cx="132" cy="16" r="3"/>
+                </svg>
+                <h3>Events &amp; Volunteering</h3>
+                <p>[Events you planned or helped run, outreach and community service, and the people you served.]</p>
+                <ul class="tag-list" aria-label="Examples">
+                  <li>[Event]</li><li>[Outreach]</li><li>[Service Hours]</li>
+                </ul>
+                <span class="sheen" aria-hidden="true"></span>
+              </article>
+              <span class="depth-star depth-star--a" aria-hidden="true"></span>
+              <span class="depth-star depth-star--b" aria-hidden="true"></span>
+            </div></div>
+            <span class="ground-shadow" aria-hidden="true"></span>
+          </div>
 
-          <div class="scene3d skill-scene fd-4 reveal"><div class="float3d"><div class="tilt3d" data-tilt-card><span class="plate plate--2" aria-hidden="true"></span><span class="plate plate--1" aria-hidden="true"></span><article class="skill-card panel">
-            <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
-              <polyline points="14,40 40,12 68,34 96,58 128,22"/>
-              <circle cx="14" cy="40" r="3"/><circle cx="40" cy="12" r="3"/><circle cx="68" cy="34" r="4"/><circle cx="96" cy="58" r="3.5"/><circle cx="128" cy="22" r="3"/>
-            </svg>
-            <h3>[Skill Group 3]</h3>
-            <p>[Short description of this skill area — what you do with it and how well you know it.]</p>
-          <span class="sheen" aria-hidden="true"></span></article><span class="depth-star depth-star--a" aria-hidden="true"></span></div></div><span class="ground-shadow" aria-hidden="true"></span></div>
+          <div class="scene3d fd-3 reveal" data-anim="rise">
+            <div class="float3d"><div class="tilt3d" data-tilt-card data-particles="12" data-particles-pad="34" data-particles-alpha="0.85">
+              <span class="plate plate--2" aria-hidden="true"></span>
+              <span class="plate plate--1" aria-hidden="true"></span>
+              <article class="skill-card panel">
+                <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
+                  <polyline points="14,40 40,12 68,34 96,58 128,22"/>
+                  <circle cx="14" cy="40" r="3"/><circle cx="40" cy="12" r="3"/><circle cx="68" cy="34" r="4"/><circle cx="96" cy="58" r="3.5"/><circle cx="128" cy="22" r="3"/>
+                </svg>
+                <h3>Contests &amp; Academics</h3>
+                <p>[Competitions, hackathons, quiz bees, honors and academic projects, and where you placed.]</p>
+                <ul class="tag-list" aria-label="Examples">
+                  <li>[Competition]</li><li>[Honor]</li><li>[Project]</li>
+                </ul>
+                <span class="sheen" aria-hidden="true"></span>
+              </article>
+              <span class="depth-star depth-star--a" aria-hidden="true"></span>
+              <span class="depth-star depth-star--b" aria-hidden="true"></span>
+            </div></div>
+            <span class="ground-shadow" aria-hidden="true"></span>
+          </div>
         </div>
 
         <!-- 🔗 BUTTON LINK: goes to page 2 -->
-        <div class="page-cta reveal">
-          <a class="btn btn--primary" href="work.html#showcase">See my work →</a>
+        <div class="page-cta reveal" data-anim="zoom">
+          <a class="btn btn--primary" href="work.html#showcase">Open the Quest Log →</a>
         </div>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <p>© <span id="year">2026</span> [YOUR NAME]. An original fan-inspired design — no official game assets used. · <a href="work.html">Work &amp; Contact →</a></p>
+    <p>© <span id="year">2026</span> [YOUR NAME]. An original fan-inspired design — no official game assets used. · <a href="work.html">Quest Log &amp; Contact →</a></p>
   </footer>
 </body>
 </html>
