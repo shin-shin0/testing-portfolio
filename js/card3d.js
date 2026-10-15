@@ -8,6 +8,8 @@
      toward your cursor in 3D, and a soft light sheen follows the
      pointer. Leave and it eases back.
    - Desktop (mouse) only; disabled with "reduce motion".
+   - NEW: the tilt is switched off while the contact puzzle is active
+     (scene has the class "puzzle-on"), so it can't disturb dragging.
    HOW TO USE IT ON ANOTHER ELEMENT
    - Wrap it like the photo in index.html:
        .scene3d > .float3d > .tilt3d[data-tilt-card] > your content
@@ -31,6 +33,7 @@
 
     scene.addEventListener('pointermove', function (e) {
       if (e.pointerType !== 'mouse') return;
+      if (scene.classList.contains('puzzle-on')) { tilt.style.transform = ''; return; }   // puzzle running: no tilt
       var r = scene.getBoundingClientRect();
       var nx = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width - 0.5) * 2));
       var ny = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height - 0.5) * 2));

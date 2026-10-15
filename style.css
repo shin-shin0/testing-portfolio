@@ -1298,25 +1298,6 @@ html.stage-open { overflow: hidden; }
 /* 16.1 the loader emblem rings/stars rotate around their own centre */
 .em-ring--out, .em-ring--mid, .loader-emblem .em-star { transform-box: fill-box; transform-origin: center; }
 
-/* 16.2 hero badges: your organizations / roles, shown like party members */
-.hero-badges {
-  display: flex; flex-wrap: wrap; justify-content: center; gap: .6rem;
-  max-width: 46rem; margin: 0 auto 2rem; padding: 0; list-style: none;
-}
-.hero-badges li {
-  display: inline-flex; align-items: center; gap: .5rem;
-  padding: .38rem .95rem;
-  border: 1px solid rgba(var(--gold-rgb), .5); border-radius: 999px;
-  background: var(--glass-strong);
-  font-size: .82rem; letter-spacing: .06em; color: var(--text);
-}
-.hero-badges li::before { content: ""; width: 10px; height: 10px; background: var(--gold); clip-path: var(--star-clip); flex: none; }
-:root[data-theme="light"] .hero-badges li {
-  color: #ffffff; font-weight: 600; background: rgba(255, 255, 255, .2); border-color: rgba(255, 255, 255, .75);
-  text-shadow: 0 1px 8px rgba(20, 90, 140, .55);
-}
-:root[data-theme="light"] .hero-badges li::before { background: #fff6c8; }
-
 /* 16.3 skill chips */
 .tag-list { display: flex; flex-wrap: wrap; gap: .45rem; margin: 1rem 0 0; padding: 0; list-style: none; }
 .tag-list li {
@@ -1366,3 +1347,71 @@ html.stage-open { overflow: hidden; }
 /* 16.6 light-mode legibility: hero eyebrow + badges stay readable over bright sky and windmills */
 :root[data-theme="light"] .hero-eyebrow { text-shadow: 0 1px 10px rgba(20, 90, 140, .95), 0 0 3px rgba(20, 90, 140, .7); }
 :root[data-theme="light"] .hero-badges li { background: rgba(38, 112, 166, .5); border-color: rgba(255, 255, 255, .8); text-shadow: 0 1px 4px rgba(10, 60, 100, .6); }
+/* =====================================================================
+   ADDITIONS (round 2)
+   ===================================================================== */
+
+/* ---- Task 2: hero spacing after removing the badges ---- */
+.hero-tagline { margin-bottom: clamp(1.6rem, 4.5vw, 2.8rem); }
+.hero-cta { margin-top: 0; }
+
+/* ---- Task 4: neighbours "make room, then settle" when a card is put back in the deck ----
+   Uses the separate `translate` property so it doesn't fight showcase.js's inline transform. */
+@keyframes deckRoomL { 0% { translate: 0 0; } 40% { translate: -16px 0; } 100% { translate: 0 0; } }
+@keyframes deckRoomR { 0% { translate: 0 0; } 40% { translate: 16px 0; } 100% { translate: 0 0; } }
+.project-slot.deck-nudge-l { animation: deckRoomL .35s ease-out; }
+.project-slot.deck-nudge-r { animation: deckRoomR .35s ease-out; }
+
+/* ---- Task 5: playable puzzle ---- */
+.scene3d.puzzle-on .float3d { animation-play-state: paused; }   /* keep the card still while pieces are dragged */
+
+.puzzle-piece { cursor: grab; transition: transform .15s ease; -webkit-tap-highlight-color: transparent; }
+.puzzle-piece:focus { outline: none; }                          /* a clip-path would hide an outline anyway */
+.puzzle-wrap.is-held { filter: drop-shadow(0 16px 18px rgba(0,0,0,.45)); }
+.puzzle-wrap.is-held .puzzle-piece { transform: scale(1.03); cursor: grabbing; }
+.puzzle-wrap.is-focus { filter: drop-shadow(0 0 7px rgba(255,226,140,.95)) drop-shadow(0 0 2px #fff); }
+.puzzle-wrap.is-locked { filter: drop-shadow(0 0 4px rgba(255,226,140,.35)); }
+.puzzle-piece[aria-disabled="true"] { cursor: default; }
+[data-theme="light"] .puzzle-wrap.is-held { filter: drop-shadow(0 14px 16px rgba(40,90,110,.35)); }
+[data-theme="light"] .puzzle-wrap.is-focus { filter: drop-shadow(0 0 7px rgba(60,170,190,.95)) drop-shadow(0 0 2px #fff); }
+[data-theme="light"] .puzzle-wrap.is-locked { filter: drop-shadow(0 0 4px rgba(120,200,160,.4)); }
+
+.puzzle-handle {
+  width: 34px; height: 34px; margin: -17px 0 0 -17px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 18px; line-height: 1; user-select: none;
+  color: #2a1d05; background: radial-gradient(circle at 35% 30%, #fff3c9, #e7c27d);
+  border: 1px solid rgba(255,255,255,.75); box-shadow: 0 4px 12px rgba(0,0,0,.4);
+  opacity: 0; transform: scale(.6); transition: opacity .18s ease, transform .18s ease; cursor: grab; touch-action: none;
+}
+.puzzle-handle.is-on { opacity: 1; transform: scale(1); }
+[data-theme="light"] .puzzle-handle { color: #0f4a58; background: radial-gradient(circle at 35% 30%, #fff, #a8e6ee); box-shadow: 0 4px 12px rgba(40,110,130,.3); }
+
+.puzzle-hint { text-align: center; margin: 1.2rem auto .2rem; max-width: 40rem; font-size: .92rem; opacity: .8; padding: 0 1rem; }
+.puzzle-msg { text-align: center; min-height: 1.6em; margin: .4rem 0 0; font-family: "Cinzel", serif; letter-spacing: .08em; opacity: 0; transform: translateY(6px); transition: opacity .35s ease, transform .35s ease; }
+.puzzle-msg.is-on { opacity: 1; transform: none; }
+
+.contact-card { position: relative; }
+.shimmer-sweep { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; pointer-events: none; z-index: 5; }
+.shimmer-sweep::before {
+  content: ""; position: absolute; top: -25%; bottom: -25%; left: -60%; width: 45%; transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255,244,210,.0) 15%, rgba(255,244,210,.9) 50%, rgba(255,244,210,0) 85%, transparent);
+  animation: pzSweep var(--shimmer-ms, 1500ms) ease-in-out 2 both;
+}
+.shimmer-sweep.is-soft::before { opacity: .55; animation-iteration-count: 1; }
+@keyframes pzSweep { from { left: -60%; } to { left: 120%; } }
+.contact-card.is-shimmer { animation: pzGlow 1.6s ease-in-out 2; }
+@keyframes pzGlow { 50% { box-shadow: 0 0 40px 6px rgba(255,226,140,.45); } }
+[data-theme="light"] .contact-card.is-shimmer { animation-name: pzGlowLight; }
+@keyframes pzGlowLight { 50% { box-shadow: 0 0 40px 6px rgba(255,255,255,.8), 0 0 60px 10px rgba(120,210,200,.35); } }
+.puzzle-sparks { position: absolute; pointer-events: none; z-index: 6; }
+
+/* ---- Task 6: idle cursor ---- */
+.idle-sky { position: fixed; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; }
+.idle-slime { position: fixed; left: 0; top: 0; pointer-events: none; z-index: 9000; will-change: transform; }
+.idle-slime svg { width: 100%; height: 100%; overflow: visible; opacity: 0; transform: scale(.2); transition: opacity .35s ease, transform .45s cubic-bezier(.2,1.4,.4,1); }
+.idle-slime.is-on svg { opacity: 1; transform: scale(1); }
+.idle-slime.is-pop svg { opacity: 0; transform: scale(1.6); transition: opacity .25s ease, transform .25s ease-out; }
+.sl-swirls { transform-origin: 60px 60px; animation: slSpin 7s linear infinite; }
+.sl-vortex { transform-origin: 60px 46px; animation: slSpin 3.2s linear infinite; }
+@keyframes slSpin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .sl-swirls, .sl-vortex { animation: none; } }

@@ -26,7 +26,8 @@
 
   <link rel="stylesheet" href="style.css">
 
-  <!-- theme.js runs immediately (no defer) so the saved light/dark choice is applied before the page paints -->
+  <!-- theme.js runs immediately (no defer) so the saved light/dark choice is applied before the page paints.
+       IMPORTANT: it must be included ONLY ONCE (a second copy used to double-toggle the theme button). -->
   <script src="js/theme.js"></script>
   <!-- loader.js also runs immediately so the loading screen shows from the first paint -->
   <script src="js/loader.js"></script>
@@ -45,7 +46,6 @@
   <script src="js/marquee.js" defer></script>
   <script src="js/showcase.js" defer></script>
   <script src="js/text.js" defer></script>
-  <script src="js/theme.js" defer></script>
 </head>
 
 <body>
@@ -136,13 +136,6 @@
           </h1>
 
           <p class="hero-tagline" data-depth="55" data-move="-8">[Student leader, club member and curious adventurer, collecting experiences one activity at a time.]</p>
-
-          <!-- Your "party members": 3 organizations, roles or achievements you want seen first -->
-          <ul class="hero-badges" data-depth="62" data-move="-9" aria-label="Highlights">
-            <li>[Organization / Club 1]</li>
-            <li>[Your Role or Position]</li>
-            <li>[Organization / Club 2]</li>
-          </ul>
 
           <!-- 🔗 BUTTON LINKS: both go to page 2. Change the href if you want them to open somewhere else. -->
           <div class="hero-cta" data-depth="70" data-move="-10">

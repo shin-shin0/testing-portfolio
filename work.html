@@ -113,7 +113,7 @@
   </header>
 
   <main>
-    <!-- =================== 4. SHOWCASE (one belt) =================== -->
+    <!-- =================== 4. SHOWCASE (one belt of 3 cards) =================== -->
     <section class="section section--wide section--first" id="showcase" aria-labelledby="showcase-title" data-showcase>
       <div class="container">
         <header class="section-head section-head--row reveal">
@@ -139,7 +139,8 @@
            aria-label="Student activities carousel. Use the left and right arrow keys to scroll.">
         <ul class="showcase-track">
 
-          <!-- Each <li class="project-slot"> is one quest card. Copy one to add more.
+          <!-- The Quest Log has 3 quest cards. Each <li class="project-slot"> is one card.
+               showcase.js automatically repeats the 3 cards so the belt loops with no gaps.
                IMAGE: replace the placeholder text in .project-thumb with <img src="images/activity-1.jpg" alt="[Describe the photo]">
                TAG = category chip, stars = how big a highlight it was (3 to 5). -->
           <li class="project-slot">
@@ -179,67 +180,16 @@
           <li class="project-slot">
             <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
               <div class="project-thumb">
-                <span class="project-tag">VOLUNTEER</span>
+                <span class="project-tag">EVENT</span>
                 <span>[PHOTO 3]</span>
                 <span class="rarity" aria-hidden="true">★★★★</span>
-              </div>
-              <div class="project-body">
-                <h3>[Outreach / Community Project]</h3>
-                <span class="project-meta">[Your Role] · [Month Year]</span>
-                <p>[Who you helped, what the team did, and how many people it reached.]</p>
-                <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
-                <a class="btn btn--small" href="https://example.com/[activity-3]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
-              </div>
-            </article>
-          </li>
-
-          <li class="project-slot">
-            <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
-              <div class="project-thumb">
-                <span class="project-tag">CLUB</span>
-                <span>[PHOTO 4]</span>
-                <span class="rarity" aria-hidden="true">★★★★</span>
-              </div>
-              <div class="project-body">
-                <h3>[Club / Organization Name]</h3>
-                <span class="project-meta">[Member / Officer] · [Years Active]</span>
-                <p>[What the club does, what you contributed, and your favorite memory.]</p>
-                <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
-                <a class="btn btn--small" href="https://example.com/[activity-4]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
-              </div>
-            </article>
-          </li>
-
-          <li class="project-slot">
-            <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
-              <div class="project-thumb">
-                <span class="project-tag">EVENT</span>
-                <span>[PHOTO 5]</span>
-                <span class="rarity" aria-hidden="true">★★★★★</span>
               </div>
               <div class="project-body">
                 <h3>[Event You Organized or Joined]</h3>
                 <span class="project-meta">[Committee / Role] · [Month Year]</span>
                 <p>[What happened at the event, your part in making it work, and how it went.]</p>
                 <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
-                <a class="btn btn--small" href="https://example.com/[activity-5]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
-              </div>
-            </article>
-          </li>
-
-          <li class="project-slot">
-            <article class="project-card panel" tabindex="0" aria-haspopup="dialog">
-              <div class="project-thumb">
-                <span class="project-tag">ACADEMIC</span>
-                <span>[PHOTO 6]</span>
-                <span class="rarity" aria-hidden="true">★★★</span>
-              </div>
-              <div class="project-body">
-                <h3>[Research / Seminar / Showcase]</h3>
-                <span class="project-meta">[Your Role] · [Year]</span>
-                <p>[The topic, what you built or presented, and what you took away from it.]</p>
-                <!-- 🔗 YOUR LINK: change the href below (album, post, certificate, article...) -->
-                <a class="btn btn--small" href="https://example.com/[activity-6]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
+                <a class="btn btn--small" href="https://example.com/[activity-3]" target="_blank" rel="noopener">Read the story <span aria-hidden="true">→</span></a>
               </div>
             </article>
           </li>
@@ -267,7 +217,8 @@
         </div>
       </div>
 
-      <!-- 3D floating contact card -->
+      <!-- 3D floating contact card. puzzle.js turns it into a playable jigsaw puzzle
+           (drag + rotate the pieces; solve it to reveal the card). -->
       <div class="scene3d contact-scene fd-1 reveal" data-puzzle>
         <div class="float3d">
           <div class="tilt3d" data-tilt-card>
@@ -293,7 +244,8 @@
         <span class="ground-shadow" aria-hidden="true"></span>
       </div>
 
-      <!-- Solve button: puzzle.js shows it (it stays hidden if the puzzle can't run, e.g. reduced motion) -->
+      <!-- Solve button: puzzle.js shows it (it stays hidden if the puzzle can't run, e.g. reduced motion).
+           puzzle.js also adds the hint line and the "Puzzle solved" message just above this block. -->
       <div class="puzzle-controls reveal" hidden>
         <button class="btn" type="button" data-puzzle-solve><span class="pz-label">✦ Solve the puzzle</span></button>
       </div>

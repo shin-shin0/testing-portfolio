@@ -2,19 +2,23 @@
    showcase.js — project cards: auto-sliding belt + "pull out" + "present"
    =====================================================================
    WHAT IT DOES
-   - The project cards slide slowly and loop forever (the set is cloned
-     so there is no visible jump). They overlap a little, like a hand
-     of playing cards.
+   - The project cards (3 of them) slide slowly and loop forever (the set
+     is cloned as many times as needed, so there is no visible jump).
+     They overlap a little, like a hand of playing cards.
    - Hover a card: it is pulled up and out of the stack (CSS), and the
      belt pauses.
    - CLICK a card (or press Enter on it): it flies out of the stack and
      is presented big in the middle of the screen while the rest of the
      page blurs. Click outside, press Esc or the X to put it back.
      (Links inside a card still work.)
+   - NEW: putting it back is animated. The card lifts in a small arc,
+     tucks into its exact place in the deck with a tiny overshoot, the
+     backdrop un-blurs in sync, and the neighbouring cards make room
+     and settle.
    - Drag / swipe to scroll by hand (with momentum); auto-sliding
      resumes afterwards. Prev/Next buttons and Left/Right arrow keys work.
    - Cards near the centre scale up and glow.
-   - Reduced motion: no auto-slide; everything else still works.
+   - Reduced motion: no auto-slide, instant swap back; everything else works.
    EDIT HERE: the CONFIG object below, and the cards in work.html.
    ===================================================================== */
 (function () {
@@ -33,12 +37,17 @@
     resumeDelayTouch: 1500,
     friction: 0.04,          // momentum decay after a drag (lower = stops sooner)
     presentScale: 2,         // biggest zoom when a card is presented
-    presentMs: 760           // how long the fly-out takes
+    presentMs: 760,          // how long the fly-out takes
+    returnMs: 680,           // how long the "tuck back into the deck" takes
+    nudgeMs: 350,            // how long neighbouring cards "make room, then settle"
+    minSets: 3               // never fewer copies of the card set than this
   };
 
   var presenting = false;    // true while a card is presented (belt pauses)
+  var needsRemeasure = false;
 
   function mod(n, m) { return ((n % m) + m) % m; }
+  function lerp(a, b, t) { return a + (b - a) * t; }
 
   /* ---------- One carousel row ---------- */
   function Row(viewport) {
@@ -90,7 +99,9 @@
     this.setW = firstClone.offsetLeft - first.offsetLeft;
     this.step = this.setW / this.base.length;
 
-    var total = Math.ceil(this.vw / this.setW) + 2;
+    // With only 3 cards the set is narrow, so we need several copies to fill wide screens:
+    // one spare set on the left + enough to cover the viewport + one spare on the right.
+    var total = Math.max(CONFIG.minSets, Math.ceil(this.vw / this.setW) + 2);
     for (var i = 2; i < total; i++) addSet();
     track.style.marginLeft = (-this.setW) + 'px';
 
@@ -238,7 +249,10 @@
 
   var rt;
   function remeasure() { rows.forEach(function (r) { r.measure(); }); }
-  window.addEventListener('resize', function () { clearTimeout(rt); rt = setTimeout(function () { if (!presenting) remeasure(); }, 150); });
+  window.addEventListener('resize', function () {
+    clearTimeout(rt);
+    rt = setTimeout(function () { if (!presenting) remeasure(); else needsRemeasure = true; }, 150);
+  });
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(remeasure);
 
   /* =====================================================================
@@ -269,10 +283,18 @@
   function presentCard(cardEl, byKeyboard) {
     if (presenting || current) return;
     ensureStage();
+    stage.style.transitionDuration = '';   // back to the normal (CSS) speed
 
     var slot = cardEl.closest('.project-slot');
     var r = cardEl.getBoundingClientRect();
     var vw = window.innerWidth, vh = window.innerHeight;
+
+    // which of the base cards is this? (so we can find it again if the belt is re-measured)
+    var idx = 0;
+    rows.forEach(function (row) {
+      var i = row.slots.indexOf(slot);
+      if (i > -1) idx = i % row.base.length;
+    });
 
     // a copy of the card, placed exactly over the original
     var wrap = document.createElement('div');
@@ -292,7 +314,11 @@
     var dy = vh / 2 - (r.top + r.height / 2);
     var finalT = 'translate(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px) scale(' + s.toFixed(3) + ')';
 
-    current = { slot: slot, card: cardEl, wrap: wrap, finalT: finalT, byKeyboard: byKeyboard };
+    current = {
+      slot: slot, card: cardEl, wrap: wrap, finalT: finalT, byKeyboard: byKeyboard,
+      idx: idx, s: s, dx: dx, dy: dy,
+      box: { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: r.width }   // where the wrapper sits (its layout box)
+    };
     presenting = true;
     slot.classList.add('is-lifted');
     document.documentElement.classList.add('stage-open');
@@ -311,30 +337,85 @@
     closeBtn.focus({ preventScroll: true });
   }
 
+  // If the belt was re-measured while a card was presented, the original slot may have been
+  // replaced. Find the matching card again (nearest to the middle of the screen).
+  function relocate(c) {
+    if (document.body.contains(c.slot)) return;
+    var best = null, bestD = Infinity, mid = window.innerWidth / 2;
+    rows.forEach(function (row) {
+      row.slots.forEach(function (sl, i) {
+        if (i % row.base.length !== c.idx) return;
+        var b = sl.getBoundingClientRect();
+        var d = Math.abs(b.left + b.width / 2 - mid);
+        if (d < bestD) { bestD = d; best = sl; }
+      });
+    });
+    if (best) {
+      c.slot = best;
+      c.card = best.querySelector('.project-card') || c.card;
+      best.classList.add('is-lifted');
+    }
+  }
+
+  function nudgeNeighbours(slot) {
+    var p = slot.previousElementSibling, n = slot.nextElementSibling;
+    if (p) p.classList.add('deck-nudge-l');
+    if (n) n.classList.add('deck-nudge-r');
+    setTimeout(function () {
+      if (p) p.classList.remove('deck-nudge-l');
+      if (n) n.classList.remove('deck-nudge-r');
+    }, CONFIG.nudgeMs + 60);
+  }
+
   function closeCard(fromButton) {
-    if (!current) return;
+    if (!current || current === 'closing') return;
     var c = current;
     current = 'closing';
+
+    if (needsRemeasure) { remeasure(); needsRemeasure = false; }
+    relocate(c);
+
+    // Un-blur the page and fade the backdrop IN SYNC with the card's trip
+    stage.style.transitionDuration = reduce ? '' : CONFIG.returnMs + 'ms';
     stage.classList.remove('is-open');
+    document.documentElement.classList.remove('stage-open');
 
     function done() {
+      // hand-off in one frame: real card appears, clone disappears
       c.wrap.remove();
       c.slot.classList.remove('is-lifted');
-      document.documentElement.classList.remove('stage-open');
+      stage.style.transitionDuration = '';
       presenting = false;
       current = null;
       rows.forEach(function (row) { row.resumeAt = performance.now() + 600; });
+      if (!reduce) nudgeNeighbours(c.slot);
       if (c.byKeyboard) { try { c.card.focus({ preventScroll: true }); } catch (e) { /* ignore */ } }
     }
-    if (c.wrap.animate && !reduce) {
-      var a = c.wrap.animate([
-        { transform: c.finalT },
-        { transform: 'translate(0,0) scale(1)' }
-      ], { duration: 480, easing: 'cubic-bezier(.5,0,.25,1)', fill: 'forwards' });
-      a.onfinish = done;
-    } else {
-      done();
+
+    if (!c.wrap.animate || reduce) { done(); return; }
+
+    // Live position of the ORIGINAL card (includes its fan rotation and centre-scale)
+    var r2 = c.card.getBoundingClientRect();
+    var tx = (r2.left + r2.width / 2) - c.box.cx;
+    var ty = (r2.top + r2.height / 2) - c.box.cy;
+    var ts = r2.width / c.box.w;
+    var tilt = parseFloat(getComputedStyle(c.card).rotate) || 0;
+
+    function T(x, y, sc, rot) {
+      return 'translate(' + x.toFixed(1) + 'px,' + y.toFixed(1) + 'px) scale(' + sc.toFixed(3) + ') rotate(' + rot.toFixed(2) + 'deg)';
     }
+    var frames = [
+      { transform: T(c.dx, c.dy, c.s, 0), offset: 0 },
+      // lift + arc over the deck
+      { transform: T(lerp(c.dx, tx, 0.55), lerp(c.dy, ty, 0.55) - 46, lerp(c.s, ts, 0.55) * 1.05, tilt * 0.5), offset: 0.55 },
+      // tuck in: slightly low and small...
+      { transform: T(tx, ty + 7, ts * 0.975, tilt * 1.2), offset: 0.82 },
+      // ...then settle exactly in place
+      { transform: T(tx, ty, ts, tilt), offset: 1 }
+    ];
+    var a = c.wrap.animate(frames, { duration: CONFIG.returnMs, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'forwards' });
+    a.onfinish = done;
+    a.oncancel = done;
   }
 
   document.addEventListener('keydown', function (e) {

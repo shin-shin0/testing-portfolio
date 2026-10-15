@@ -10,10 +10,15 @@
      choice in the browser (localStorage).
    - Broadcasts a "themechange" event so the background and cursor
      scripts can react.
+   - SAFE AGAINST DOUBLE LOADING: if the file is accidentally included
+     twice, the second copy does nothing (so the button can't toggle twice).
    EDIT HERE: DEFAULT_THEME ('dark' or 'light').
    ===================================================================== */
 (function () {
   'use strict';
+
+  if (window.__portfolioThemeInit) return;   // never bind two handlers
+  window.__portfolioThemeInit = true;
 
   var DEFAULT_THEME = 'dark';
   var KEY = 'portfolio-theme';
