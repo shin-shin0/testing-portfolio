@@ -8,28 +8,29 @@
                 curling WIND streaks and clicking blows out leaves
                 and a ripple of wind.
    - Hovering links/buttons/cards: the cursor grows (and speeds up).
-   - Only runs on devices with a real mouse (hover + fine pointer);
-     on touch devices the normal cursor is left alone.
+   - Only runs on devices with a real mouse (hover + fine pointer).
    - Reduced motion: no easing, no trail, no particles, no idle effects.
 
-   IDLE (new)  ACTIVE -> MERGING -> IDLE -> RETURNING -> ACTIVE
+   IDLE   ACTIVE -> MERGING -> IDLE -> RETURNING -> ACTIVE
    - Leave the mouse still for idleDelay ms:
        DARK : the star + ring dissolve into a glowing point which becomes
-              a big COMET sweeping across the sky (behind the page content,
-              next to the meteor canvas); another one every few seconds.
-       LIGHT: the windmill spins up into a whirl of wind which condenses
-              into a floating, blinking ANEMO-SLIME-style creature (an
-              original drawing) that bobs and drifts near the cursor.
-   - Any mouse move / click / scroll pops it away and the normal cursor
+              a HUGE COMET that sweeps across the whole screen; another
+              one every few seconds.
+       LIGHT: the windmill spins up into a whirl of wind which becomes a
+              STORM DRAGON (an original drawing inspired by Venti's
+              dragon): it flies out of the whirl, crosses the sky with its
+              wings beating, and returns every now and then.
+   - Both are drawn on a transparent canvas ABOVE the page but under the
+     cursor, with pointer-events: none, so they never block clicks.
+   - Any mouse move / click / scroll fades it away and the normal cursor
      re-forms right at the mouse.
-   - Hovering links, an open quest card, the loader and puzzle dragging
-     all count as activity.
+   - Hovering links, an open quest card or résumé, the loader and puzzle
+     dragging all count as activity.
    EDIT HERE: the CONFIG object and HOVER_SELECTOR below.
    ===================================================================== */
 (function () {
   'use strict';
 
-  // Skip entirely on touch / coarse-pointer devices
   if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
   var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -51,35 +52,41 @@
     idleDelay: 3500,       // ms without activity before the cursor starts merging
     mergeMs: 750,          // how long the cursor takes to dissolve / condense
     returnMs: 380,         // how long the normal cursor takes to re-form
+    skyZ: 8400,            // z-index of the idle canvas (above the page, below the cursor)
 
     /* --- idle (dark): comet --- */
-    cometSize: 9,          // head size / tail thickness (px). meteors.js lines are ~1-3px, so this is BIG
-    cometTail: 1.5,        // seconds of trail kept = tail length (speed x this)
-    cometSpeedMin: 380,    // px per second
-    cometSpeedMax: 560,
+    cometSize: 30,         // head size / tail thickness (px). Normal meteors are 1-3px, so this is HUGE
+    cometTail: 1.5,        // seconds of trail kept (tail length = speed x this)
+    cometSpeedMin: 750,    // px per second
+    cometSpeedMax: 1000,
     cometAccel: 0.9,       // seconds the first comet takes to pick up speed
-    cometTurn: 0.28,       // max curve (radians per second) of the gentle arc
+    cometGrow: 1.0,        // seconds the first comet takes to swell from a point of light to full size
+    cometTurn: 0.22,       // max curve (radians per second) of the gentle arc
     cometGapMin: 4,        // seconds of waiting between comets
     cometGapMax: 9,
-    cometAlpha: 0.85,      // overall translucency
+    cometAlpha: 0.9,       // overall translucency (lower = more see-through)
     cometColors: ['255,236,190', '127,224,208', '169,139,255'],   // gold, teal, violet (as in meteors.js)
 
-    /* --- idle (light): anemo slime --- */
-    slimeSize: 84,         // px
-    slimeBob: 7,           // px up/down
-    slimeBobSpeed: 2.2,    // bob speed (radians/second)
-    slimeDriftRadius: 26,  // px radius of its lazy loop around where the cursor stopped
-    slimeDriftSpeed: 0.45, // speed of that loop
-    blinkMin: 2, blinkMax: 5,       // seconds between blinks
-    puffMin: 3, puffMax: 6.5        // seconds between little wind puffs
+        /* --- idle (light): wandering bird --- */
+    birdSize: 24,          // body size (px). The wings are ~2.3x this
+    birdSpeedMin: 150,     // px per second
+    birdSpeedMax: 210,
+    birdLifeMin: 9,        // seconds it wanders on screen before flying away
+    birdLifeMax: 15,
+    birdFlap: 10,          // wing beats (radians/second)
+    birdTurnMin: 4,        // seconds between turning around
+    birdTurnMax: 8,
+    birdGapMin: 5,         // seconds of waiting between visits
+    birdGapMax: 10,
+    birdAlpha: 0.97,       // overall translucency (lower = more see-through)
   };
-  var HOVER_SELECTOR = 'a, button, [role="button"], input, textarea, select, summary, .panel, .project-card, .skill-card, [data-cursor-hover]';
+
+  var HOVER_SELECTOR = 'a, button, [role="button"], input, textarea, select, summary, .panel, .project-card, [data-cursor-hover]';
 
   function isLight() { return root.getAttribute('data-theme') === 'light'; }
 
   var STAR_PATH = 'M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z';
 
-  // A 4-sailed windmill: each sail = a spar + a lattice panel
   function sail(deg) {
     return '<g transform="rotate(' + deg + ' 16 16)">' +
       '<line class="spar" x1="16" y1="16" x2="16" y2="2.5"/>' +
@@ -91,28 +98,6 @@
     sail(0) + sail(90) + sail(180) + sail(270) + '<circle class="hub" cx="16" cy="16" r="2.6"/></svg>';
   var STAR_SVG = '<svg class="ic ic-star" viewBox="0 0 24 24" focusable="false"><path d="' + STAR_PATH + '"/></svg>';
   var RING_SVG = '<svg class="ic" viewBox="0 0 24 24" focusable="false"><path class="p-star" d="' + STAR_PATH + '"/><circle class="p-circle" cx="12" cy="12" r="10.5"/></svg>';
-
-  // An ORIGINAL cute floating wind-slime: translucent cyan blob, belly + gloss highlights,
-  // a swirling vortex core, a friendly face and tiny wind curls around it.
-  var SLIME_SVG = '<svg viewBox="0 0 120 120" focusable="false">' +
-    '<defs>' +
-      '<radialGradient id="slBody" cx="38%" cy="28%" r="80%"><stop offset="0" stop-color="#f0fdff"/><stop offset=".5" stop-color="#9fe8f2" stop-opacity=".95"/><stop offset="1" stop-color="#43b8d0" stop-opacity=".9"/></radialGradient>' +
-      '<radialGradient id="slGlow"><stop offset="0" stop-color="#bff4ff" stop-opacity=".8"/><stop offset="1" stop-color="#bff4ff" stop-opacity="0"/></radialGradient>' +
-    '</defs>' +
-    '<ellipse cx="60" cy="108" rx="34" ry="8" fill="url(#slGlow)"/>' +
-    '<g class="sl-swirls" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="2.4" opacity=".85">' +
-      '<path d="M10 58 q-8 -2 -6 -9 q3 -6 9 -2"/><path d="M110 52 q8 -2 6 -9 q-3 -6 -9 -2"/><path d="M92 12 q6 -6 12 -1 q4 5 -2 8"/>' +
-    '</g>' +
-    '<path d="M60 18 C86 18 101 40 101 66 C101 90 82 103 60 103 C38 103 19 90 19 66 C19 40 34 18 60 18Z" fill="url(#slBody)" stroke="#2c9db6" stroke-opacity=".55" stroke-width="2"/>' +
-    '<ellipse cx="60" cy="86" rx="27" ry="12" fill="#fff" opacity=".32"/>' +
-    '<path d="M36 42 C40 31 51 26 60 26" stroke="#fff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".8"/>' +
-    '<path class="sl-vortex" d="M60 46 C60 42 66 42 66 47 C66 54 54 54 54 46 C54 37 68 36 70 46" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity=".75"/>' +
-    '<g class="sl-look"><g class="sl-eyes">' +
-      '<ellipse cx="48" cy="72" rx="4.6" ry="6" fill="#1b4a63"/><ellipse cx="72" cy="72" rx="4.6" ry="6" fill="#1b4a63"/>' +
-      '<circle cx="49.6" cy="69.6" r="1.7" fill="#fff"/><circle cx="73.6" cy="69.6" r="1.7" fill="#fff"/>' +
-    '</g></g>' +
-    '<path d="M54 84 q6 5 12 0" fill="none" stroke="#1b4a63" stroke-width="2.2" stroke-linecap="round"/>' +
-    '</svg>';
 
   function makeCursor(className, markup) {
     var el = document.createElement('div');
@@ -129,26 +114,19 @@
   var starInner = star.querySelector('.cursor__inner');
   var ringInner = ring.querySelector('.cursor__inner');
 
-  // Canvas used for the trail + click effects (on top of the page)
+  // Canvas used for the trail + click effects (on top of everything)
   var fx = document.createElement('canvas');
   fx.className = 'cursor-fx';
   fx.setAttribute('aria-hidden', 'true');
   document.body.appendChild(fx);
   var ctx = fx.getContext('2d');
 
-  // "Sky" canvas for the idle comet: sits right after the meteor canvas, so it is in the
-  // background layer (behind the page content), never above text.
+  // "Sky" canvas for the idle comet / dragon: above the page, under the cursor, never clickable
   var sky = document.createElement('canvas');
   sky.className = 'idle-sky';
   sky.setAttribute('aria-hidden', 'true');
-  var meteorCv = document.getElementById('meteor-canvas');
-  if (meteorCv && meteorCv.parentNode) {
-    meteorCv.parentNode.insertBefore(sky, meteorCv.nextSibling);
-    var mz = getComputedStyle(meteorCv).zIndex;
-    if (mz && mz !== 'auto') sky.style.zIndex = mz;
-  } else {
-    document.body.appendChild(sky);
-  }
+  sky.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:' + CONFIG.skyZ;
+  document.body.appendChild(sky);
   var sctx = sky.getContext('2d');
 
   var dpr = 1, vw = 0, vh = 0;
@@ -174,25 +152,23 @@
   var lastTime = 0;
   var fanAngle = 0, hovering = false, fanBoost = 1;
 
-  // idle state machine
   var state = 'active';                       // active | merging | idle | returning
-  var stateT = 0;                             // seconds spent in the current state
+  var stateT = 0;
   var lastActivity = performance.now();
-  var mergeFx = null;                         // {k, light} while merging (drawn on the fx canvas)
+  var mergeFx = null;
   var idle = {
     theme: 'dark',
-    comets: [], dust: [], nextComet: Infinity, fade: 1, fading: false, skyDirty: false,
-    t: 0, ax: 0, ay: 0, blinkAt: 0, blinkPhase: -1, puffAt: 0, lookX: 0, lookY: 0
+    comets: [], birds: [], dust: [],
+    nextFly: Infinity, fade: 1, fading: false, skyDirty: false
   };
-  var slimeEl = null, slimeLook = null, slimeEyes = null;
 
   function setActive(on) { star.classList.toggle('is-on', on); ring.classList.toggle('is-on', on); }
   function setHover(on) { hovering = on; star.classList.toggle('is-hover', on); ring.classList.toggle('is-hover', on); }
 
   function rand(a, b) { return a + Math.random() * (b - a); }
+  function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
 
-  /* ---------- Particles ---------- */
-  // dark mode: little four-pointed sparkles
+  /* ---------- Particles (normal cursor effects) ---------- */
   function spawnSparkle(x, y, burst) {
     var color = CONFIG.colors[Math.floor(Math.random() * CONFIG.colors.length)];
     var angle = Math.random() * Math.PI * 2;
@@ -204,9 +180,8 @@
       size: burst ? 2 + Math.random() * 3 : 1.5 + Math.random() * 2.5, color: color
     });
   }
-  // light mode: a curling streak of wind left behind the cursor
   function spawnWind(x, y, dx, dy) {
-    var a = Math.atan2(dy, dx) + Math.PI + rand(-0.25, 0.25);   // points BACK along the path
+    var a = Math.atan2(dy, dx) + Math.PI + rand(-0.25, 0.25);
     var drift = rand(18, 42);
     particles.push({
       kind: 'wind', x: x, y: y, a: a, len: rand(22, 42), curl: rand(-9, 9) || 6,
@@ -214,7 +189,6 @@
       life: 0, max: rand(0.5, 0.8)
     });
   }
-  // light mode: click = leaves blown outward + a ripple of wind
   function spawnLeaf(x, y) {
     var a = rand(0, Math.PI * 2), sp = rand(70, 200);
     particles.push({
@@ -252,7 +226,6 @@
     ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.quadraticCurveTo(cx, cy, x2, y2);
     ctx.strokeStyle = 'rgba(80,165,212,' + (alpha * 0.4) + ')'; ctx.lineWidth = 3.8; ctx.stroke();
     ctx.strokeStyle = 'rgba(255,255,255,' + (alpha * 0.95) + ')'; ctx.lineWidth = 1.7; ctx.stroke();
-    // little curl at the tail end
     ctx.beginPath(); ctx.arc(x2 + nx * p.curl * 0.35, y2 + ny * p.curl * 0.35, 3.2, p.a, p.a + Math.PI * 1.5);
     ctx.strokeStyle = 'rgba(255,255,255,' + (alpha * 0.8) + ')'; ctx.lineWidth = 1.3; ctx.stroke();
   }
@@ -270,11 +243,10 @@
     ctx.strokeStyle = 'rgba(80,165,212,' + ((1 - k) * 0.5) + ')'; ctx.lineWidth = 1.2; ctx.stroke();
   }
 
-  /* ---------- Idle: the merge glow / whirl (drawn on top, on the fx canvas) ---------- */
+  /* ---------- Idle: the merge glow / whirl (drawn on the fx canvas) ---------- */
   function drawMergeFx(m) {
     var k = m.k;
     if (!m.light) {
-      // dark: a glowing point of light gathers where the cursor was
       var r = 10 + 26 * Math.sin(Math.PI * Math.min(1, k * 1.15)) + 6 * k;
       var g = ctx.createRadialGradient(mouse.x, mouse.y, 0, mouse.x, mouse.y, r);
       g.addColorStop(0, 'rgba(255,255,255,' + (0.35 + 0.65 * k) + ')');
@@ -284,7 +256,6 @@
       ctx.globalAlpha = 1; ctx.fillStyle = g;
       ctx.beginPath(); ctx.arc(mouse.x, mouse.y, r, 0, Math.PI * 2); ctx.fill();
     } else {
-      // light: wind swirls spiral inward and condense
       ctx.globalCompositeOperation = 'source-over';
       ctx.lineCap = 'round';
       for (var j = 0; j < 3; j++) {
@@ -301,134 +272,292 @@
     ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1;
   }
 
-  /* ---------- Idle (dark): the comet ---------- */
-  function launchComet(x, y, first) {
-    var heading = Math.PI * 0.75;                           // down-left, like meteors.js
+  /* =====================================================================
+     IDLE (dark): the HUGE comet
+     ===================================================================== */
+  function scheduleNext(min, max) { idle.nextFly = rand(min, max); }
+
+  function launchComet(first) {
     var c = {
-      x: x, y: y, ang: heading + rand(-0.12, 0.12),
       v: rand(CONFIG.cometSpeedMin, CONFIG.cometSpeedMax),
-      turn: rand(0.1, CONFIG.cometTurn) * (Math.random() < 0.5 ? -1 : 1),   // gentle arc
-      age: 0, pts: [], first: first, size: CONFIG.cometSize
+      turn: rand(0.08, CONFIG.cometTurn) * (Math.random() < 0.5 ? -1 : 1),
+      age: 0, pts: [], first: first, off: false, size: CONFIG.cometSize
     };
-    if (!first) { c.x = rand(vw * 0.35, vw + vh * 0.5); c.y = -60; }
+    if (first) {
+      // born at the cursor; head for the far side of the screen so it crosses most of the sky
+      c.x = mouse.x; c.y = mouse.y;
+      var h = mouse.x > vw * 0.5 ? Math.PI * 0.78 : Math.PI * 0.22;   // down-left or down-right
+      if (mouse.y > vh * 0.6) h = -h;                                  // low on the screen: go up instead
+      c.ang = h + rand(-0.08, 0.08);
+    } else {
+      c.x = rand(vw * 0.45, vw + vh * 0.4); c.y = -c.size * 8;         // enters from the top-right
+      c.ang = Math.PI * 0.75 + rand(-0.1, 0.1);
+    }
     idle.comets.push(c);
-    idle.nextComet = Infinity;
+    idle.nextFly = Infinity;
   }
 
+  function drawComets(dt) {
+    var A = idle.fade * CONFIG.cometAlpha, cols = CONFIG.cometColors, i, j, k, kk;
+    for (i = idle.comets.length - 1; i >= 0; i--) {
+      var c = idle.comets[i];
+
+      if (!c.off) {
+        c.age += dt;
+        var grow = c.first ? Math.min(1, c.age / CONFIG.cometGrow) : 1;
+        var sp = c.v * (c.first ? 0.35 + 0.65 * Math.min(1, c.age / CONFIG.cometAccel) : 1);
+        c.ang += c.turn * dt;
+        c.x += Math.cos(c.ang) * sp * dt; c.y += Math.sin(c.ang) * sp * dt;
+        c.g = 0.2 + 0.8 * grow;
+        c.pts.push({ x: c.x, y: c.y, t: 0, g: c.g });
+        var m = c.size * 8;
+        if (c.age > 0.6 && (c.x < -m || c.x > vw + m || c.y < -m * 2 || c.y > vh + m)) c.off = true;
+      }
+      for (j = 0; j < c.pts.length; j++) c.pts[j].t += dt;
+      while (c.pts.length && c.pts[0].t > CONFIG.cometTail) c.pts.shift();
+
+      if (c.off && !c.pts.length) {
+        idle.comets.splice(i, 1);
+        if (!idle.comets.length && !idle.fading) scheduleNext(CONFIG.cometGapMin, CONFIG.cometGapMax);
+        continue;
+      }
+
+      // fine dust shed along the way
+      if (!c.off && Math.random() < dt * 80) {
+        idle.dust.push({ x: c.x + rand(-c.size, c.size), y: c.y + rand(-c.size, c.size), vx: rand(-30, 30), vy: rand(-30, 30),
+          life: 0, max: rand(0.7, 1.4), s: rand(1, 2.8), c: cols[Math.floor(Math.random() * 3)] });
+      }
+
+      // tapered tail: three stacked strokes (violet wide, teal middle, gold thin)
+      sctx.lineCap = 'round';
+      for (j = 1; j < c.pts.length; j++) {
+        var a = c.pts[j - 1], b = c.pts[j];
+        k = 1 - b.t / CONFIG.cometTail;
+        if (k <= 0) continue;
+        kk = Math.pow(k, 1.3) * b.g;
+        sctx.beginPath(); sctx.moveTo(a.x, a.y); sctx.lineTo(b.x, b.y);
+        sctx.strokeStyle = 'rgba(' + cols[2] + ',' + (0.22 * kk * A) + ')'; sctx.lineWidth = c.size * 2.4 * kk; sctx.stroke();
+        sctx.strokeStyle = 'rgba(' + cols[1] + ',' + (0.34 * kk * A) + ')'; sctx.lineWidth = c.size * 1.4 * kk; sctx.stroke();
+        sctx.strokeStyle = 'rgba(' + cols[0] + ',' + (0.75 * kk * A) + ')'; sctx.lineWidth = c.size * 0.7 * kk; sctx.stroke();
+      }
+
+      // head: big halo, hot core and a star flare
+      if (!c.off) {
+        var s = c.size * c.g, hr = s * 6;
+        var hg = sctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, hr);
+        hg.addColorStop(0, 'rgba(255,255,255,' + A + ')');
+        hg.addColorStop(0.2, 'rgba(' + cols[0] + ',' + (0.7 * A) + ')');
+        hg.addColorStop(0.55, 'rgba(' + cols[1] + ',' + (0.22 * A) + ')');
+        hg.addColorStop(1, 'rgba(' + cols[2] + ',0)');
+        sctx.fillStyle = hg; sctx.beginPath(); sctx.arc(c.x, c.y, hr, 0, Math.PI * 2); sctx.fill();
+        sctx.strokeStyle = 'rgba(255,255,255,' + (0.7 * A) + ')'; sctx.lineWidth = Math.max(1.5, s * 0.12);
+        sctx.beginPath();
+        sctx.moveTo(c.x - s * 3.2, c.y); sctx.lineTo(c.x + s * 3.2, c.y);
+        sctx.moveTo(c.x, c.y - s * 3.2); sctx.lineTo(c.x, c.y + s * 3.2);
+        sctx.stroke();
+      }
+    }
+  }
+
+   /* =====================================================================
+     IDLE (light): the WANDERING BIRD — an original drawing
+     (cream-white songbird, sky-teal wings and tail, golden beak,
+     a soft wind ribbon behind it)
+     ===================================================================== */
+  function launchBird(first) {
+    var d = {
+      t: 0, first: first, S: CONFIG.birdSize, mode: 'wander',
+      life: rand(CONFIG.birdLifeMin, CONFIG.birdLifeMax),
+      speed: rand(CONFIG.birdSpeedMin, CONFIG.birdSpeedMax),
+      ph1: rand(0, 6.28), ph2: rand(0, 6.28), flap: rand(0, 6.28),
+      b: 0, wt: rand(0, 6.28), glide: 0, glideT: 0, nextGlide: rand(2, 4),
+      nextTurn: rand(CONFIG.birdTurnMin, CONFIG.birdTurnMax), hist: []
+    };
+    if (first) { d.x = mouse.x; d.y = mouse.y; d.dir = mouse.x < vw / 2 ? 1 : -1; }
+    else { d.dir = Math.random() < 0.5 ? 1 : -1; d.x = d.dir > 0 ? -80 : vw + 80; d.y = rand(vh * 0.15, vh * 0.6); }
+    d.fx = d.dir;
+    idle.birds.push(d);
+    idle.nextFly = Infinity;
+  }
+
+  // a leaf / feather shape pointing along +x
+  function petal(c, L, w) {
+    c.beginPath(); c.moveTo(0, 0);
+    c.bezierCurveTo(L * 0.22, -w, L * 0.72, -w * 0.9, L, 0);
+    c.bezierCurveTo(L * 0.72, w * 0.9, L * 0.22, w, 0, 0);
+    c.closePath();
+  }
+
+  // a wing = three overlapping feathers fanned from the shoulder
+  function birdWing(c, x, y, L, th, A, back) {
+    var a = back ? A * 0.8 : A;
+    c.save(); c.translate(x, y); c.rotate(th); c.lineJoin = 'round';
+    for (var k = 2; k >= 0; k--) {
+      c.save(); c.rotate((k - 1) * 0.24);
+      var len = L * (1 - k * 0.1);
+      var g = c.createLinearGradient(0, 0, len, 0);
+      g.addColorStop(0, 'rgba(255,255,255,' + a + ')');
+      g.addColorStop(0.55, 'rgba(150,222,236,' + a + ')');
+      g.addColorStop(1, 'rgba(70,160,205,' + a + ')');
+      petal(c, len, L * 0.26);
+      c.fillStyle = g; c.fill();
+      c.strokeStyle = 'rgba(40,120,160,' + a + ')'; c.lineWidth = Math.max(1.2, L * 0.03); c.stroke();
+      c.restore();
+    }
+    c.restore();
+  }
+
+  function drawBirds(dt) {
+    var A = idle.fade * CONFIG.birdAlpha, c = sctx, i;
+    for (var bi = idle.birds.length - 1; bi >= 0; bi--) {
+      var d = idle.birds[bi];
+      d.t += dt;
+      var S = d.S * (d.first ? Math.min(1, 0.25 + 0.75 * d.t / 1.2) : 1);   // the first one swells out of the whirl
+
+      // --- wander: drift up and down, turn around now and then ---
+      var want = 0.5 * Math.sin(d.t * 0.8 + d.ph1) + 0.25 * Math.sin(d.t * 1.9 + d.ph2);
+      if (d.mode === 'wander') {
+        if (d.y < vh * 0.12) want = 0.5; else if (d.y > vh * 0.8) want = -0.5;
+        d.nextTurn -= dt;
+        if (d.x < 90) d.dir = 1;
+        else if (d.x > vw - 90) d.dir = -1;
+        else if (d.nextTurn <= 0) { d.dir = -d.dir; d.nextTurn = rand(CONFIG.birdTurnMin, CONFIG.birdTurnMax); }
+        if (d.t > d.life) { d.mode = 'leave'; d.dir = d.x < vw / 2 ? -1 : 1; }
+      } else { want = -0.2; }                                   // leaving: climb a little
+      d.b += (clamp(want, -0.6, 0.6) - d.b) * Math.min(1, dt * 2);
+      d.fx += (d.dir - d.fx) * Math.min(1, dt * 1.8);           // smooth turn-around
+      d.x += d.fx * Math.cos(d.b) * d.speed * dt;
+      d.y += Math.sin(d.b) * d.speed * 0.6 * dt;
+
+      // --- wings: flapping with occasional glides ---
+      d.nextGlide -= dt;
+      if (d.nextGlide <= 0) { d.glideT = rand(0.9, 1.7); d.nextGlide = rand(3, 6); }
+      d.glideT = Math.max(0, d.glideT - dt);
+      d.glide += ((d.glideT > 0 ? 1 : 0) - d.glide) * Math.min(1, dt * 4);
+      d.wt += dt * CONFIG.birdFlap * (1 - 0.8 * d.glide);
+      var flap = Math.sin(d.wt + d.flap);
+      var bob = flap * S * 0.08 * (1 - d.glide);
+
+      // --- wind ribbon behind it ---
+      d.hist.push({ x: d.x, y: d.y, t: 0 });
+      for (i = 0; i < d.hist.length; i++) d.hist[i].t += dt;
+      while (d.hist.length && d.hist[0].t > 1.3) d.hist.shift();
+      c.lineCap = 'round';
+      for (i = 1; i < d.hist.length; i++) {
+        var h0 = d.hist[i - 1], h1 = d.hist[i], k = 1 - h1.t / 1.3;
+        if (k <= 0) continue;
+        c.beginPath();
+        c.moveTo(h0.x, h0.y + Math.sin(h0.t * 9) * S * 0.3 * (1 - k));
+        c.lineTo(h1.x, h1.y + Math.sin(h1.t * 9) * S * 0.3 * (1 - k));
+        c.strokeStyle = 'rgba(255,255,255,' + (0.6 * k * A) + ')'; c.lineWidth = Math.max(1, S * 0.14 * k); c.stroke();
+      }
+
+      // --- the bird (drawn facing +x; mirrored when it turns) ---
+      var sx = clamp(d.fx * 1.5, -1, 1);
+      if (Math.abs(sx) < 0.03) sx = sx < 0 ? -0.03 : 0.03;
+      c.save();
+      c.translate(d.x, d.y + bob); c.rotate(d.b * 0.55 * (sx < 0 ? -1 : 1)); c.scale(sx, 1);
+      c.lineJoin = 'round';
+      var line = 'rgba(40,120,160,' + A + ')', lw = Math.max(1.2, S * 0.06);
+
+      var halo = c.createRadialGradient(0, 0, 0, 0, 0, S * 2.6);       // soft glow so it reads on bright sky
+      halo.addColorStop(0, 'rgba(255,255,255,' + (0.35 * A) + ')'); halo.addColorStop(1, 'rgba(255,255,255,0)');
+      c.fillStyle = halo; c.beginPath(); c.arc(0, 0, S * 2.6, 0, 6.2832); c.fill();
+
+      // tail feathers
+      c.save(); c.translate(-S * 1.0, S * 0.05);
+      for (var q = -1; q <= 1; q++) {
+        c.save(); c.rotate(Math.PI + q * 0.28 + Math.sin(d.wt * 0.5) * 0.05);
+        petal(c, S * 1.5, S * 0.3);
+        c.fillStyle = 'rgba(120,205,225,' + A + ')'; c.fill(); c.strokeStyle = line; c.lineWidth = lw; c.stroke();
+        c.restore();
+      }
+      c.restore();
+
+      // far wing
+      birdWing(c, S * 0.25, -S * 0.25, S * 2.0, -3.15 + 0.25 * d.glide + 0.7 * (1 - d.glide) * Math.sin(d.wt + d.flap + 0.6), A, true);
+
+      // body, belly, back
+      c.fillStyle = 'rgba(255,252,240,' + A + ')'; c.strokeStyle = line; c.lineWidth = lw;
+      c.beginPath(); c.ellipse(0, 0, S * 1.15, S * 0.62, 0, 0, 6.2832); c.fill(); c.stroke();
+      c.fillStyle = 'rgba(255,255,255,' + A + ')';
+      c.beginPath(); c.ellipse(S * 0.1, S * 0.2, S * 0.9, S * 0.3, 0, 0, 6.2832); c.fill();
+      c.fillStyle = 'rgba(130,208,226,' + (0.6 * A) + ')';
+      c.beginPath(); c.ellipse(-S * 0.2, -S * 0.22, S * 0.85, S * 0.3, 0, 0, 6.2832); c.fill();
+
+      // head, crest, beak, eye
+      c.save(); c.translate(S * 1.1, -S * 0.4); c.rotate(-2.3);
+      petal(c, S * 0.6, S * 0.16); c.fillStyle = 'rgba(120,205,225,' + A + ')'; c.fill(); c.stroke();
+      c.restore();
+      c.fillStyle = 'rgba(255,252,240,' + A + ')';
+      c.beginPath(); c.arc(S * 1.15, -S * 0.35, S * 0.46, 0, 6.2832); c.fill(); c.stroke();
+      c.fillStyle = 'rgba(246,200,100,' + A + ')';
+      c.beginPath(); c.moveTo(S * 1.55, -S * 0.42); c.lineTo(S * 2.0, -S * 0.3); c.lineTo(S * 1.55, -S * 0.2); c.closePath(); c.fill(); c.stroke();
+      c.fillStyle = 'rgba(255,190,190,' + (0.5 * A) + ')';
+      c.beginPath(); c.arc(S * 1.28, -S * 0.22, S * 0.1, 0, 6.2832); c.fill();
+      c.fillStyle = 'rgba(25,60,90,' + A + ')';
+      c.beginPath(); c.arc(S * 1.3, -S * 0.42, S * 0.09, 0, 6.2832); c.fill();
+      c.fillStyle = 'rgba(255,255,255,' + A + ')';
+      c.beginPath(); c.arc(S * 1.33, -S * 0.45, S * 0.035, 0, 6.2832); c.fill();
+
+      // near wing (on top)
+      birdWing(c, S * 0.1, -S * 0.3, S * 2.3, -3.15 + 0.25 * d.glide + 0.75 * (1 - d.glide) * flap, A, false);
+      c.restore();
+
+      // sparkles shed from the wings
+      if (Math.random() < dt * 20) {
+        idle.dust.push({ x: d.x - d.fx * S + rand(-6, 6), y: d.y + rand(-S, S * 0.4), vx: rand(-12, 12), vy: rand(-14, 6),
+          life: 0, max: rand(0.7, 1.3), s: rand(1.4, 3), c: Math.random() < 0.5 ? '255,255,255' : '150,235,255' });
+      }
+
+      // finished: it has flown off screen
+      if ((d.mode === 'leave' && (d.x < -140 || d.x > vw + 140)) || d.t > d.life + 20) {
+        idle.birds.splice(bi, 1);
+        if (!idle.birds.length && !idle.fading) scheduleNext(CONFIG.birdGapMin, CONFIG.birdGapMax);
+      }
+    }
+  }
+
+
+  /* ---------- sky canvas update ---------- */
   function updateSky(dt) {
-    if (!idle.comets.length && !idle.dust.length) {
+    var has = idle.comets.length || idle.birds.length || idle.dust.length;
+    if (!has) {
       if (idle.skyDirty) { sctx.clearRect(0, 0, vw, vh); idle.skyDirty = false; }
       return;
     }
     idle.skyDirty = true;
-    if (idle.fading) { idle.fade -= dt / 0.6; if (idle.fade <= 0) { idle.comets = []; idle.dust = []; idle.fading = false; idle.fade = 1; return; } }
-    var A = idle.fade * CONFIG.cometAlpha, cols = CONFIG.cometColors, i, j;
-
-    sctx.clearRect(0, 0, vw, vh);
-    sctx.globalCompositeOperation = 'lighter';
-    sctx.lineCap = 'round';
-
-    for (i = idle.comets.length - 1; i >= 0; i--) {
-      var c = idle.comets[i];
-      c.age += dt;
-      var sp = c.v * (c.first ? Math.min(1, c.age / CONFIG.cometAccel) : 1);
-      c.ang += c.turn * dt;
-      c.x += Math.cos(c.ang) * sp * dt; c.y += Math.sin(c.ang) * sp * dt;
-      c.pts.push({ x: c.x, y: c.y, t: 0 });
-      for (j = 0; j < c.pts.length; j++) c.pts[j].t += dt;
-      while (c.pts.length && c.pts[0].t > CONFIG.cometTail) c.pts.shift();
-
-      var off = c.x < -160 || c.y > vh + 160 || c.x > vw + vw || c.y < -260;
-      if (off && !c.pts.length) { idle.comets.splice(i, 1); if (!idle.comets.length && !idle.fading) idle.nextComet = rand(CONFIG.cometGapMin, CONFIG.cometGapMax); continue; }
-
-      // dust
-      if (!off && Math.random() < dt * 45) {
-        idle.dust.push({ x: c.x + rand(-6, 6), y: c.y + rand(-6, 6), vx: rand(-22, 22), vy: rand(-22, 22), life: 0, max: rand(0.6, 1.2), s: rand(0.8, 2), ci: Math.floor(Math.random() * 3) });
+    if (idle.fading) {
+      idle.fade -= dt / 0.7;
+      if (idle.fade <= 0) {
+        idle.comets = []; idle.birds = []; idle.dust = []; idle.fading = false; idle.fade = 1;
+        sctx.clearRect(0, 0, vw, vh); idle.skyDirty = false;
+        return;
       }
-
-      // tapered tail: three stacked strokes (violet wide, teal middle, gold thin)
-      for (j = 1; j < c.pts.length; j++) {
-        var a = c.pts[j - 1], b = c.pts[j];
-        var k = 1 - b.t / CONFIG.cometTail;                 // 1 at the head, 0 at the tip
-        if (k <= 0) continue;
-        var kk = Math.pow(k, 1.4);
-        sctx.beginPath(); sctx.moveTo(a.x, a.y); sctx.lineTo(b.x, b.y);
-        sctx.strokeStyle = 'rgba(' + cols[2] + ',' + (0.2 * kk * A) + ')'; sctx.lineWidth = c.size * 2.4 * kk; sctx.stroke();
-        sctx.strokeStyle = 'rgba(' + cols[1] + ',' + (0.32 * kk * A) + ')'; sctx.lineWidth = c.size * 1.4 * kk; sctx.stroke();
-        sctx.strokeStyle = 'rgba(' + cols[0] + ',' + (0.7 * kk * A) + ')'; sctx.lineWidth = c.size * 0.7 * kk; sctx.stroke();
-      }
-
-      // head: soft halo + hot core
-      var hr = c.size * 6;
-      var hg = sctx.createRadialGradient(c.x, c.y, 0, c.x, c.y, hr);
-      hg.addColorStop(0, 'rgba(255,255,255,' + A + ')');
-      hg.addColorStop(0.25, 'rgba(' + cols[0] + ',' + (0.6 * A) + ')');
-      hg.addColorStop(0.6, 'rgba(' + cols[1] + ',' + (0.18 * A) + ')');
-      hg.addColorStop(1, 'rgba(' + cols[2] + ',0)');
-      sctx.fillStyle = hg; sctx.beginPath(); sctx.arc(c.x, c.y, hr, 0, Math.PI * 2); sctx.fill();
     }
+    sctx.clearRect(0, 0, vw, vh);
+    var dark = idle.theme === 'dark';
+    sctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
 
-    for (i = idle.dust.length - 1; i >= 0; i--) {
+    if (dark) drawComets(dt); else drawBirds(dt);
+
+    // dust (drawn on top)
+    for (var i = idle.dust.length - 1; i >= 0; i--) {
       var d = idle.dust[i]; d.life += dt;
       if (d.life >= d.max) { idle.dust.splice(i, 1); continue; }
       d.x += d.vx * dt; d.y += d.vy * dt;
-      sctx.globalAlpha = (1 - d.life / d.max) * A;
-      sctx.fillStyle = 'rgb(' + cols[d.ci] + ')';
-      sctx.beginPath(); sctx.arc(d.x, d.y, d.s, 0, Math.PI * 2); sctx.fill();
+      sctx.globalAlpha = (1 - d.life / d.max) * idle.fade * 0.9;
+      sctx.fillStyle = 'rgb(' + d.c + ')';
+      sctx.beginPath(); sctx.arc(d.x, d.y, d.s, 0, 6.2832); sctx.fill();
     }
     sctx.globalAlpha = 1; sctx.globalCompositeOperation = 'source-over';
-  }
-
-  /* ---------- Idle (light): the slime ---------- */
-  function buildSlime() {
-    if (slimeEl) return;
-    slimeEl = document.createElement('div');
-    slimeEl.className = 'idle-slime';
-    slimeEl.setAttribute('aria-hidden', 'true');
-    slimeEl.style.width = slimeEl.style.height = CONFIG.slimeSize + 'px';
-    slimeEl.innerHTML = SLIME_SVG;
-    document.body.appendChild(slimeEl);
-    slimeLook = slimeEl.querySelector('.sl-look');
-    slimeEyes = slimeEl.querySelector('.sl-eyes');
-  }
-
-  function updateSlime(dt) {
-    if (!slimeEl) return;
-    idle.t += dt;
-    var t = idle.t, S = CONFIG.slimeSize;
-    var x = idle.ax + Math.cos(t * CONFIG.slimeDriftSpeed) * CONFIG.slimeDriftRadius;
-    var y = idle.ay + Math.sin(t * CONFIG.slimeDriftSpeed * 1.3) * CONFIG.slimeDriftRadius * 0.6 +
-            Math.sin(t * CONFIG.slimeBobSpeed) * CONFIG.slimeBob;
-    var sq = Math.sin(t * CONFIG.slimeBobSpeed + Math.PI / 2) * 0.06;   // squash & stretch
-    slimeEl.style.transform = 'translate3d(' + (x - S / 2).toFixed(1) + 'px,' + (y - S / 2).toFixed(1) + 'px,0) scale(' + (1 - sq).toFixed(3) + ',' + (1 + sq).toFixed(3) + ')';
-
-    // eyes look toward the middle of the page
-    var dx = vw / 2 - x, dy = vh / 2 - y, len = Math.sqrt(dx * dx + dy * dy) || 1;
-    idle.lookX += (dx / len * 2.8 - idle.lookX) * Math.min(1, dt * 3);
-    idle.lookY += (dy / len * 1.8 - idle.lookY) * Math.min(1, dt * 3);
-    slimeLook.setAttribute('transform', 'translate(' + idle.lookX.toFixed(2) + ' ' + idle.lookY.toFixed(2) + ')');
-
-    // blink
-    var sy = 1;
-    if (idle.blinkPhase < 0 && t > idle.blinkAt) idle.blinkPhase = 0;
-    if (idle.blinkPhase >= 0) {
-      idle.blinkPhase += dt / 0.18;
-      sy = 1 - 0.92 * Math.sin(Math.PI * Math.min(1, idle.blinkPhase));
-      if (idle.blinkPhase >= 1) { idle.blinkPhase = -1; idle.blinkAt = t + rand(CONFIG.blinkMin, CONFIG.blinkMax); }
-    }
-    slimeEyes.setAttribute('transform', 'translate(0 72) scale(1 ' + sy.toFixed(3) + ') translate(0 -72)');
-
-    // little wind puff
-    if (t > idle.puffAt) {
-      idle.puffAt = t + rand(CONFIG.puffMin, CONFIG.puffMax);
-      for (var n = 0; n < 3; n++) spawnWind(x + S * 0.3, y + rand(-10, 14), 1, rand(-0.25, 0.1));
-    }
   }
 
   /* ---------- Idle: state machine ---------- */
   function blocked() {
     return hovering || document.hidden ||
-      root.classList.contains('stage-open') || root.classList.contains('js-loading') || root.classList.contains('puzzle-dragging');
+      root.classList.contains('stage-open') || root.classList.contains('modal-open') ||
+      root.classList.contains('js-loading') || root.classList.contains('puzzle-dragging');
   }
 
   function clearInner() {
@@ -441,34 +570,24 @@
     state = 'merging'; stateT = 0;
     idle.theme = isLight() ? 'light' : 'dark';
     starInner.style.transition = 'none'; ringInner.style.transition = 'none';
-    if (idle.theme === 'light') buildSlime();
   }
 
   function enterIdle() {
     state = 'idle'; stateT = 0; mergeFx = null; fanBoost = 1;
     starInner.style.opacity = '0'; ringInner.style.opacity = '0';
     idle.fade = 1; idle.fading = false;
-    if (idle.theme === 'dark') {
-      launchComet(mouse.x, mouse.y, true);
-    } else {
-      idle.t = 0;
-      idle.ax = Math.min(vw - 60, Math.max(60, mouse.x));
-      idle.ay = Math.min(vh - 60, Math.max(60, mouse.y - 14));
-      idle.blinkAt = rand(CONFIG.blinkMin, CONFIG.blinkMax); idle.blinkPhase = -1;
-      idle.puffAt = rand(1.2, 2.5); idle.lookX = idle.lookY = 0;
-      slimeEl.classList.remove('is-pop'); slimeEl.classList.add('is-on');
-    }
+    if (idle.theme === 'dark') launchComet(true);
+    else launchBird(true);
   }
 
   function beginReturn() {
     if (state !== 'idle' && state !== 'merging') return;
     mergeFx = null; fanBoost = 1;
-    if (idle.theme === 'light') {
-      if (slimeEl) { slimeEl.classList.remove('is-on'); slimeEl.classList.add('is-pop'); }
-      if (!reduce) { spawnRipple(mouse.x, mouse.y); for (var j = 0; j < 8; j++) spawnLeaf(mouse.x, mouse.y); }
-    } else {
-      idle.fading = true;                                  // comet fades / trails away
-      if (!reduce) for (var i = 0; i < 8; i++) spawnSparkle(mouse.x, mouse.y, true);
+    idle.fading = true;                              // the comet / dragon fades away
+    idle.nextFly = Infinity;
+    if (!reduce) {
+      if (idle.theme === 'light') { spawnRipple(mouse.x, mouse.y); for (var j = 0; j < 8; j++) spawnLeaf(mouse.x, mouse.y); }
+      else for (var i = 0; i < 8; i++) spawnSparkle(mouse.x, mouse.y, true);
     }
     // the normal cursor re-forms AT the current mouse position
     starPos.x = ringPos.x = mouse.x; starPos.y = ringPos.y = mouse.y;
@@ -479,9 +598,9 @@
 
   function hardReset() {   // tab hidden: drop everything immediately (no leaks)
     state = 'active'; mergeFx = null; fanBoost = 1;
-    idle.comets = []; idle.dust = []; idle.fading = false; idle.fade = 1; idle.nextComet = Infinity;
+    idle.comets = []; idle.dragons = []; idle.dust = [];
+    idle.fading = false; idle.fade = 1; idle.nextFly = Infinity;
     sctx.clearRect(0, 0, vw, vh); idle.skyDirty = false;
-    if (slimeEl) { slimeEl.classList.remove('is-on', 'is-pop'); }
     clearInner();
     lastActivity = performance.now();
   }
@@ -510,13 +629,12 @@
       mergeFx = { k: e, light: light };
       if (k >= 1) enterIdle();
     } else if (state === 'idle') {
-      if (idle.theme === 'dark') {
-        if (!idle.comets.length && !idle.fading) {
-          idle.nextComet -= dt;
-          if (idle.nextComet <= 0) launchComet(0, 0, false);
+      if (!idle.fading) {
+        var list = idle.theme === 'dark' ? idle.comets : idle.dragons;
+        if (!list.length) {
+          idle.nextFly -= dt;
+          if (idle.nextFly <= 0) { if (idle.theme === 'dark') launchComet(false); else launchDragon(false); }
         }
-      } else {
-        updateSlime(dt);
       }
     } else if (state === 'returning') {
       var kr = Math.min(1, stateT / (CONFIG.returnMs / 1000));
@@ -524,21 +642,20 @@
       starInner.style.transform = 'scale(' + Math.max(0, s).toFixed(3) + ')';
       ringInner.style.transform = 'scale(' + Math.max(0, s).toFixed(3) + ')';
       starInner.style.opacity = ringInner.style.opacity = Math.min(1, kr * 3).toFixed(2);
-      if (slimeEl && stateT > 0.3) slimeEl.classList.remove('is-pop');
       if (kr >= 1) { clearInner(); state = 'active'; lastActivity = now; }
     }
   }
 
   /* ---------- Animation loop ---------- */
   function ease(factor, dt) {
-    return reduce ? 1 : 1 - Math.pow(1 - factor, dt * 60);   // frame-rate independent lerp
+    return reduce ? 1 : 1 - Math.pow(1 - factor, dt * 60);
   }
 
   function frame(now) {
     var dt = lastTime ? Math.min((now - lastTime) / 1000, 0.05) : 0.016;
     lastTime = now;
 
-    var lag = Math.sqrt(Math.pow(mouse.x - starPos.x, 2) + Math.pow(mouse.y - starPos.y, 2));   // ~ how fast the mouse moves
+    var lag = Math.sqrt(Math.pow(mouse.x - starPos.x, 2) + Math.pow(mouse.y - starPos.y, 2));
     var ks = ease(CONFIG.starEase, dt);
     var kr = ease(CONFIG.ringEase, dt);
     starPos.x += (mouse.x - starPos.x) * ks;
@@ -549,7 +666,6 @@
     star.style.transform = 'translate3d(' + starPos.x.toFixed(1) + 'px,' + starPos.y.toFixed(1) + 'px,0)';
     ring.style.transform = 'translate3d(' + ringPos.x.toFixed(1) + 'px,' + ringPos.y.toFixed(1) + 'px,0)';
 
-    // windmill fan spin (light mode only matters visually)
     if (!reduce && fanEl) {
       var spd = CONFIG.fanIdleSpeed + lag * CONFIG.fanMouseGain;
       if (hovering) spd *= 2.2;
@@ -564,7 +680,7 @@
     if (!reduce) {
       ctx.clearRect(0, 0, vw, vh);
       var light = isLight();
-      ctx.globalCompositeOperation = light ? 'source-over' : 'lighter';   // "lighter" glows on dark, vanishes on light
+      ctx.globalCompositeOperation = light ? 'source-over' : 'lighter';
       for (var i = particles.length - 1; i >= 0; i--) {
         var p = particles[i];
         p.life += dt;
@@ -596,7 +712,7 @@
       started = true;
       starPos.x = ringPos.x = lastTrail.x = mouse.x;
       starPos.y = ringPos.y = lastTrail.y = mouse.y;
-      root.classList.add('custom-cursor');   // hide native cursor only now
+      root.classList.add('custom-cursor');
     }
     wake();
     setActive(true);
@@ -631,7 +747,7 @@
   document.documentElement.addEventListener('mouseleave', function () { setActive(false); });
   document.documentElement.addEventListener('mouseenter', function () { if (started) setActive(true); });
 
-  // theme toggled while idle: simplest + cleanest = go back to the normal cursor of the NEW theme
+  // theme toggled while idle: go back to the normal cursor of the NEW theme
   window.addEventListener('themechange', function () { wake(); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) hardReset(); else lastActivity = performance.now(); });
 

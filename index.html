@@ -2,13 +2,16 @@
 <!--
   =====================================================================
   GENSHIN-INSPIRED PORTFOLIO  —  PAGE 1 of 2: index.html
-  (Hero, About, Journey, Activities.  Page 2 = work.html has the Quest Log + Contact)
+  (Hero, About [namecard], Handbook [table of contents].  Page 2 = work.html has the Quest Log + Contact)
   =====================================================================
-  QUICK EDIT GUIDE (full details in README.md)
-  1. Search this file for "[" to find every placeholder in [BRACKETS].d
-  2. Colors / fonts live in css/style.css under ":root".
+  QUICK EDIT GUIDE
+  1. Search this file for "[" to find every placeholder in [BRACKETS].
+  2. Colors / fonts live in style.css under ":root".
   3. Images: replace the placeholder box (photo) with an <img> tag.
   4. No inline <style> or <script> is used; everything is linked below.
+  5. Résumé: put your PDF at files/resume.pdf (paths marked 📄 below).
+  6. Music: put your two MP3 files in audio/ (see js/audio.js).
+  7. Handbook pages are generated from the <ol class="hb-source"> list (copy an <li> to add a project).
   =====================================================================
 -->
 <html lang="en" class="no-js">
@@ -19,19 +22,16 @@
   <meta name="description" content="[One sentence about you: your course, school, and the clubs, events and projects you are part of.]">
   <meta name="theme-color" content="#0b0f1f">
 
-  <!-- Google Fonts: Cinzel (display serif) + Nunito (body sans) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 
+  <!-- keep this path in sync with where style.css really lives (e.g. css/style.css) -->
   <link rel="stylesheet" href="style.css">
 
-  <!-- theme.js runs immediately (no defer) so the saved light/dark choice is applied before the page paints.
-       IMPORTANT: it must be included ONLY ONCE (a second copy used to double-toggle the theme button). -->
+  <!-- theme.js and loader.js run immediately (no defer): no flash of the wrong theme, loading screen from first paint -->
   <script src="js/theme.js"></script>
-  <!-- loader.js also runs immediately so the loading screen shows from the first paint -->
   <script src="js/loader.js"></script>
-  <!-- Everything else is deferred: runs after the page is parsed (text-fx first: it splits text into letters) -->
   <script src="js/text-fx.js" defer></script>
   <script src="js/main.js" defer></script>
   <script src="js/meteors.js" defer></script>
@@ -42,15 +42,14 @@
   <script src="js/card3d.js" defer></script>
   <script src="js/particles.js" defer></script>
   <script src="js/scroll-fx.js" defer></script>
-  <script src="js/puzzle.js" defer></script>
-  <script src="js/marquee.js" defer></script>
-  <script src="js/showcase.js" defer></script>
-  <script src="js/text.js" defer></script>
+  <script src="js/namecard.js" defer></script>
+  <script src="js/handbook.js" defer></script>
+  <script src="js/card-depth.js" defer></script>
+  <script src="js/depth-bg.js" defer></script>
+  <script src="js/audio.js" defer></script>
 </head>
 
 <body>
-  <!-- ===== LOADING SCREEN (Genshin-style). loader.js fills the tip + progress.
-       EDIT: the name, the subtitle, and the tips (data-tips, separated by | ) ===== -->
   <div id="loader" role="status" aria-live="polite" aria-label="Loading"
        data-tips="Every club you join is a new party member. Build a team that covers each other's weak spots.|Leveling up isn't only grades: events, volunteering and leadership all count as EXP.|Stuck on a project? Ask a teammate. Co-op is always stronger than solo.|Even travelers need to restore HP between exams. Rest is part of the quest.|Hover a quest card to pull it from the deck, then click it to read the whole story.|Use the sun / moon button in the menu to switch between day and night mode.">
     <div class="loader-bg" aria-hidden="true"></div>
@@ -80,8 +79,6 @@
   </div>
   <a class="skip-link" href="#about">Skip to content</a>
 
-  <!-- ===== Ambient background layers (behind everything) =====
-       Dark mode : galaxy + stars + meteors.   Light mode : Mondstadt sky, hills + winds. -->
   <div id="bg-base" aria-hidden="true"></div>
   <div id="bg-galaxy" aria-hidden="true"></div>
   <div id="bg-constellation" aria-hidden="true"></div>
@@ -91,7 +88,7 @@
   <canvas id="wind-canvas" aria-hidden="true"></canvas>
   <div id="bg-vignette" aria-hidden="true"></div>
 
-  <!-- ===== NAVBAR (Paimon-menu style) ===== -->
+  <!-- ===== NAVBAR ===== -->
   <header class="site-header" id="site-header">
     <div class="nav-inner">
       <a class="brand" href="#hero" aria-label="[YOUR NAME] — back to top">
@@ -102,13 +99,16 @@
       <nav id="nav-menu" class="nav-links" aria-label="Main">
         <a href="#hero" class="is-active">Home</a>
         <a href="#about">About</a>
-        <a href="#journey">Journey</a>
-        <a href="#skills">Activities</a>
+        <a href="#handbook">Handbook</a>
         <a href="work.html#showcase">Quest Log</a>
         <a href="work.html#contact">Contact</a>
       </nav>
 
       <div class="nav-actions">
+        <button class="theme-toggle audio-toggle" id="audio-toggle" type="button" aria-label="Play music" aria-pressed="false" title="Play music">
+          <svg class="ic-off" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M16 9.5l4.5 5M20.5 9.5l-4.5 5"/></svg>
+          <svg class="ic-on" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.3 6.6a8 8 0 0 1 0 10.8"/></svg>
+        </button>
         <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode" aria-pressed="false">
           <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></svg>
           <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
@@ -124,12 +124,10 @@
     <!-- =================== 1. HERO =================== -->
     <section class="hero" id="hero" aria-label="Introduction">
       <div class="hero-stage">
-        <!-- [data-tilt] = the block that rotates in 3D. [data-depth] = per-layer parallax. -->
         <div class="hero-text" data-tilt>
           <p class="hero-eyebrow" data-depth="30" data-move="-4">✦ [YOUR COURSE] STUDENT · [YEAR LEVEL] ✦</p>
 
           <h1 class="hero-name" data-particles="26" data-particles-pad="30" data-particles-alpha="0.7">
-            <!-- Depth duplicates (decorative). Keep the text identical to the main layer. -->
             <span class="layer layer-shadow" aria-hidden="true" data-wave data-depth="-60" data-move="26">[YOUR NAME]</span>
             <span class="layer layer-glow" aria-hidden="true" data-wave data-depth="-25" data-move="14">[YOUR NAME]</span>
             <span class="layer layer-main" data-wave data-depth="40" data-move="-6">[YOUR NAME]</span>
@@ -137,7 +135,6 @@
 
           <p class="hero-tagline" data-depth="55" data-move="-8">[Student leader, club member and curious adventurer, collecting experiences one activity at a time.]</p>
 
-          <!-- 🔗 BUTTON LINKS: both go to page 2. Change the href if you want them to open somewhere else. -->
           <div class="hero-cta" data-depth="70" data-move="-10">
             <a class="btn btn--primary" href="work.html#showcase">Open My Quest Log</a>
             <a class="btn" href="work.html#contact">Join My Party</a>
@@ -148,7 +145,7 @@
 
     <div class="star-divider reveal" aria-hidden="true"><span></span><i></i><span></span></div>
 
-    <!-- =================== 2. ABOUT =================== -->
+    <!-- =================== 2. ABOUT  (ID namecard: front = info, back = hobbies + résumé) =================== -->
     <section class="section" id="about" aria-labelledby="about-title">
       <div class="container">
         <header class="section-head reveal">
@@ -156,188 +153,239 @@
           <h2 id="about-title" data-split>The Student Behind the Activities</h2>
         </header>
 
-        <div class="about-grid">
-          <!-- 3D floating photo -->
-          <div class="scene3d photo-scene fd-1 reveal" data-anim="left">
-            <div class="float3d">
-              <div class="tilt3d" data-tilt-card>
-                <span class="plate plate--2" aria-hidden="true"></span>
-                <span class="plate plate--1" aria-hidden="true"></span>
-                <figure class="photo-card panel">
-                  <!-- PHOTO: replace the <div> below with:
-                       <img src="images/photo.jpg" alt="Portrait of [YOUR NAME]" width="640" height="800"> -->
-                  <div class="photo-placeholder" role="img" aria-label="[Portrait of YOUR NAME — replace this placeholder]">
-                    <span>[YOUR PHOTO]</span>
+        <div class="nc-stage reveal" data-anim="zoom">
+          <!-- namecard.js flips it. Do not rename the data-nc-* attributes. -->
+          <div class="namecard" data-namecard>
+            <div class="nc-inner">
+
+              <!-- ---------- FRONT ---------- -->
+              <div class="nc-face nc-front" data-nc-front>
+                <svg class="nc-art" viewBox="0 0 920 470" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+                  <defs>
+                    <linearGradient id="ncSky" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#1b5a74"/><stop offset=".5" stop-color="#47b4bd"/><stop offset="1" stop-color="#c4f2e2"/>
+                    </linearGradient>
+                    <radialGradient id="ncSun" cx=".82" cy=".18" r=".55">
+                      <stop offset="0" stop-color="#fffbe6" stop-opacity=".95"/><stop offset="1" stop-color="#fffbe6" stop-opacity="0"/>
+                    </radialGradient>
+                    <g id="ncFeather">
+                      <path d="M0 20 C25 -4 80 -6 118 10 C92 32 40 44 0 20Z" fill="#fff" fill-opacity=".72" stroke="#2f8fa3" stroke-opacity=".5" stroke-width="1.2"/>
+                      <path d="M0 20 L112 12" fill="none" stroke="#2f8fa3" stroke-opacity=".6" stroke-width="1.4"/>
+                    </g>
+                    <g id="ncLyre" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="2.6">
+                      <path d="M-18 -26 C-32 -4 -22 22 0 32 C22 22 32 -4 18 -26"/>
+                      <path d="M-22 -24 H22"/>
+                      <path d="M-8 -24 V26 M0 -24 V32 M8 -24 V26" stroke-width="1.4"/>
+                    </g>
+                  </defs>
+                  <rect width="920" height="470" fill="url(#ncSky)"/>
+                  <rect width="920" height="470" fill="url(#ncSun)"/>
+                  <g fill="none" stroke="#fff" stroke-linecap="round" opacity=".5">
+                    <path d="M-20 390 C120 330 210 430 330 366 S520 300 650 352" stroke-width="3"/>
+                    <path d="M280 70 C360 24 460 78 520 46 S650 8 720 52" stroke-width="2.4"/>
+                    <path d="M740 130 c44 -44 108 -22 108 32 s-64 76 -112 32 s-10 -86 44 -86" stroke-width="3"/>
+                    <path d="M30 120 c30 -30 74 -14 74 22 s-44 52 -76 22" stroke-width="2.4"/>
+                  </g>
+                  <g opacity=".34" transform="translate(745 285) scale(6.2)"><use href="#ncLyre"/></g>
+                  <use href="#ncFeather" transform="translate(560 60) rotate(-18) scale(1.1)" opacity=".85"/>
+                  <use href="#ncFeather" transform="translate(120 330) rotate(24) scale(.8)" opacity=".7"/>
+                  <use href="#ncFeather" transform="translate(790 380) rotate(-34) scale(.9)" opacity=".75"/>
+                  <g fill="#fff">
+                    <circle cx="610" cy="210" r="3" opacity=".8"/><circle cx="632" cy="190" r="2" opacity=".7"/><circle cx="650" cy="228" r="2.4" opacity=".6"/>
+                    <circle cx="70" cy="60" r="2.6" opacity=".8"/><circle cx="96" cy="86" r="1.8" opacity=".7"/><circle cx="860" cy="60" r="2.4" opacity=".8"/>
+                    <path d="M880 250 886 264 900 270 886 276 880 290 874 276 860 270 874 264Z" opacity=".85"/>
+                    <path d="M60 220 65 232 77 237 65 242 60 254 55 242 43 237 55 232Z" opacity=".8"/>
+                  </g>
+                  <path d="M0 470 V402 C150 352 300 432 460 392 S780 352 920 402 V470Z" fill="#1d6f7f" fill-opacity=".4"/>
+                </svg>
+                <span class="nc-frame" aria-hidden="true"></span>
+
+                <div class="nc-content">
+                  <figure class="nc-portrait">
+                    <!-- PHOTO: replace the <div> below with:
+                         <img src="images/photo.jpg" alt="Portrait of [YOUR NAME]" width="640" height="800"> -->
+                    <div class="nc-photo-ph" role="img" aria-label="[Portrait of YOUR NAME — replace this placeholder]">
+                      <span>[YOUR PHOTO]</span>
+                    </div>
+                    <figcaption>✦ [Your Title or Nickname] ✦</figcaption>
+                  </figure>
+
+                  <div class="nc-info">
+                    <p class="nc-kicker">✦ Student ID · Adventurer's Card</p>
+                    <p class="nc-name">[YOUR NAME]</p>
+                    <p class="nc-title">[YOUR COURSE] Student · [YEAR LEVEL]</p>
+
+                    <dl class="nc-fields">
+                      <div><dt>School</dt><dd>[YOUR SCHOOL]</dd></div>
+                      <div><dt>Student ID</dt><dd>[00-0000-000]</dd></div>
+                      <div><dt>Birthday</dt><dd>[Month Day]</dd></div>
+                      <div><dt>Hometown</dt><dd>[Your City]</dd></div>
+                    </dl>
+
+                    <p class="nc-lead">[One warm line: who you are as a student and what you love getting involved in.]</p>
+
+                    <div class="nc-foot">
+                      <ul class="nc-stats">
+                        <li><strong data-count="6" data-suffix="">0</strong><span>[Organizations Joined]</span></li>
+                        <li><strong data-count="40" data-suffix="+">0</strong><span>[Events &amp; Activities]</span></li>
+                        <li><strong data-count="8" data-suffix="+">0</strong><span>[Awards &amp; Certificates]</span></li>
+                      </ul>
+                      <button class="nc-flip" type="button" data-nc-flip aria-pressed="false" aria-label="Flip the card to see more about me">Flip card <span aria-hidden="true">↻</span></button>
+                    </div>
                   </div>
-                  <span class="sheen" aria-hidden="true"></span>
-                </figure>
-                <span class="depth-star depth-star--a" aria-hidden="true"></span>
-                <span class="depth-star depth-star--b" aria-hidden="true"></span>
+                </div>
               </div>
+
+              <!-- ---------- BACK: hobbies, favorites, fun facts, résumé ---------- -->
+              <div class="nc-face nc-back is-hidden" data-nc-back inert aria-hidden="true">
+                <span class="nc-frame nc-frame--back" aria-hidden="true"></span>
+                <header class="nc-back-head">
+                  <div>
+                    <p class="nc-kicker">✦ Adventurer's Record</p>
+                    <p class="nc-name nc-name--sm">[YOUR NAME]</p>
+                  </div>
+                  <button class="nc-flip" type="button" data-nc-flip aria-pressed="false" aria-label="Flip the card back to the front">↻ Flip back</button>
+                </header>
+
+                <div class="nc-tabs" role="tablist" aria-label="Sections of the card">
+                  <button type="button" role="tab" id="nc-tab-hobbies" aria-controls="nc-panel-hobbies" aria-selected="true">Hobbies</button>
+                  <button type="button" role="tab" id="nc-tab-favorites" aria-controls="nc-panel-favorites" aria-selected="false" tabindex="-1">Favorites</button>
+                  <button type="button" role="tab" id="nc-tab-facts" aria-controls="nc-panel-facts" aria-selected="false" tabindex="-1">Fun Facts</button>
+                  <button type="button" role="tab" id="nc-tab-resume" aria-controls="nc-panel-resume" aria-selected="false" tabindex="-1">Résumé</button>
+                </div>
+
+                <div class="nc-panels">
+                  <section id="nc-panel-hobbies" role="tabpanel" aria-labelledby="nc-tab-hobbies" tabindex="0">
+                    <p>[One friendly line about what you love doing when you are not studying.]</p>
+                    <ul class="nc-hobbies">
+                      <li><span class="ic" aria-hidden="true">🎧</span><div><b>[Hobby 1: e.g. Music]</b><span>[A short line about it.]</span></div></li>
+                      <li><span class="ic" aria-hidden="true">🎮</span><div><b>[Hobby 2: e.g. Gaming]</b><span>[A short line about it.]</span></div></li>
+                      <li><span class="ic" aria-hidden="true">📚</span><div><b>[Hobby 3: e.g. Reading]</b><span>[A short line about it.]</span></div></li>
+                      <li><span class="ic" aria-hidden="true">🎨</span><div><b>[Hobby 4: e.g. Drawing]</b><span>[A short line about it.]</span></div></li>
+                      <li><span class="ic" aria-hidden="true">🥾</span><div><b>[Hobby 5: e.g. Hiking]</b><span>[A short line about it.]</span></div></li>
+                      <li><span class="ic" aria-hidden="true">🍳</span><div><b>[Hobby 6: e.g. Cooking]</b><span>[A short line about it.]</span></div></li>
+                    </ul>
+                  </section>
+
+                  <section id="nc-panel-favorites" role="tabpanel" aria-labelledby="nc-tab-favorites" tabindex="0" hidden>
+                    <dl class="nc-fav">
+                      <div><dt>Favorite food</dt><dd>[Your answer]</dd></div>
+                      <div><dt>Favorite music</dt><dd>[Your answer]</dd></div>
+                      <div><dt>Favorite game</dt><dd>[Your answer]</dd></div>
+                      <div><dt>Favorite show / anime</dt><dd>[Your answer]</dd></div>
+                      <div><dt>Favorite book</dt><dd>[Your answer]</dd></div>
+                      <div><dt>Favorite place</dt><dd>[Your answer]</dd></div>
+                    </dl>
+                  </section>
+
+                  <section id="nc-panel-facts" role="tabpanel" aria-labelledby="nc-tab-facts" tabindex="0" hidden>
+                    <ul class="nc-strengths">
+                      <li><strong>[Fun fact 1]</strong><span>[A little detail that makes it memorable.]</span></li>
+                      <li><strong>[Fun fact 2]</strong><span>[A little detail that makes it memorable.]</span></li>
+                      <li><strong>[Fun fact 3]</strong><span>[A little detail that makes it memorable.]</span></li>
+                      <li><strong>[Fun fact 4]</strong><span>[A little detail that makes it memorable.]</span></li>
+                    </ul>
+                  </section>
+
+                  <section id="nc-panel-resume" role="tabpanel" aria-labelledby="nc-tab-resume" tabindex="0" hidden>
+                    <p>[One line about your résumé / CV: what it covers and when it was last updated.]</p>
+                    <div class="nc-resume-actions">
+                      <button class="btn btn--primary" type="button" data-resume-open>View résumé</button>
+                      <!-- 📄 DOWNLOAD LINK: put your PDF at files/resume.pdf (or change the href) -->
+                      <a class="btn" href="files/resume.pdf" download>Download PDF ↓</a>
+                    </div>
+                  </section>
+                </div>
+              </div>
+
             </div>
-            <span class="ground-shadow" aria-hidden="true"></span>
-          </div>
-
-          <div class="about-copy reveal" data-anim="right">
-            <p class="lead">[One warm line: who you are as a student and what you love getting involved in.]</p>
-            <p>[Paragraph one: your course, school and year level, and what made you start joining clubs, events and competitions.]</p>
-            <p>[Paragraph two: the roles you have held, what they taught you about teamwork and leadership, and what you want to try next.]</p>
-
-            <!-- 3D floating stat cards -->
-            <ul class="stats" data-reveal-stagger>
-              <li class="scene3d fd-2 reveal">
-                <div class="float3d"><div class="tilt3d" data-tilt-card>
-                  <span class="plate plate--1" aria-hidden="true"></span>
-                  <div class="stat panel"><strong data-count="6" data-suffix="">0</strong><span>[Organizations Joined]</span></div>
-                </div></div>
-                <span class="ground-shadow" aria-hidden="true"></span>
-              </li>
-              <li class="scene3d fd-3 reveal">
-                <div class="float3d"><div class="tilt3d" data-tilt-card>
-                  <span class="plate plate--1" aria-hidden="true"></span>
-                  <div class="stat panel"><strong data-count="40" data-suffix="+">0</strong><span>[Events &amp; Activities]</span></div>
-                </div></div>
-                <span class="ground-shadow" aria-hidden="true"></span>
-              </li>
-              <li class="scene3d fd-4 reveal">
-                <div class="float3d"><div class="tilt3d" data-tilt-card>
-                  <span class="plate plate--1" aria-hidden="true"></span>
-                  <div class="stat panel"><strong data-count="8" data-suffix="+">0</strong><span>[Awards &amp; Certificates]</span></div>
-                </div></div>
-                <span class="ground-shadow" aria-hidden="true"></span>
-              </li>
-            </ul>
           </div>
         </div>
+        <p class="nc-hint reveal">Click the card or press “Flip card” to see the other side ✦</p>
       </div>
     </section>
 
-    <div class="star-divider reveal" aria-hidden="true"><span></span><i></i><span></span></div>
-
-    <!-- =================== 3. JOURNEY (student timeline) =================== -->
-    <!-- Each <li> is one chapter of your student life. Copy one to add more; edit the year, title and text. -->
-    <section class="section" id="journey" aria-labelledby="journey-title">
+    <!-- =================== 3. HANDBOOK (Table of Contents) =================== -->
+    <section class="section" id="handbook" aria-labelledby="handbook-title">
       <div class="container">
         <header class="section-head reveal">
-          <p class="eyebrow">✦ Journey</p>
-          <h2 id="journey-title" data-split>My Adventure Log</h2>
+          <p class="eyebrow">✦ Handbook</p>
+          <h2 id="handbook-title" data-split>The Adventurer's Handbook</h2>
         </header>
+        <p class="hb-lead reveal">[One line on how to use it: open the book, pick a chapter from the contents, or filter by category to find a project fast.]</p>
 
-        <ol class="journey">
-          <li class="journey-step reveal" data-anim="left">
-            <div class="journey-card panel">
-              <span class="journey-year">[School Year 1]</span>
-              <h3>[Chapter title: e.g. First Steps]</h3>
-              <p>[What you joined or started this year, and one thing you learned.]</p>
+        <!-- data-owner puts your name on the book cover (handbook.js reads it) -->
+        <div class="hb-stage reveal" data-anim="zoom" data-handbook data-owner="[YOUR NAME]">
+          <div class="hb-toolbar">
+            <div class="hb-filters" role="group" aria-label="Filter projects by category">
+              <button type="button" class="hb-chip-btn is-active" data-hb-filter="all" aria-pressed="true">All</button>
+              <button type="button" class="hb-chip-btn" data-hb-filter="design" aria-pressed="false">◈ Design</button>
+              <button type="button" class="hb-chip-btn" data-hb-filter="research" aria-pressed="false">⚗ Research</button>
+              <button type="button" class="hb-chip-btn" data-hb-filter="leadership" aria-pressed="false">♛ Leadership</button>
             </div>
-          </li>
-          <li class="journey-step reveal" data-anim="right">
-            <div class="journey-card panel">
-              <span class="journey-year">[School Year 2]</span>
-              <h3>[Chapter title: e.g. Finding My Party]</h3>
-              <p>[A club, event or competition that changed how you work with others.]</p>
-            </div>
-          </li>
-          <li class="journey-step reveal" data-anim="left">
-            <div class="journey-card panel">
-              <span class="journey-year">[School Year 3]</span>
-              <h3>[Chapter title: e.g. Taking the Lead]</h3>
-              <p>[A leadership role or big project you took on, and what it achieved.]</p>
-            </div>
-          </li>
-          <li class="journey-step reveal" data-anim="right">
-            <div class="journey-card panel">
-              <span class="journey-year">[School Year 4 / Now]</span>
-              <h3>[Chapter title: e.g. The Next Horizon]</h3>
-              <p>[Where you are now and the next adventure you are heading toward.]</p>
-            </div>
-          </li>
-        </ol>
-      </div>
-    </section>
-
-    <div class="star-divider reveal" aria-hidden="true"><span></span><i></i><span></span></div>
-
-    <!-- =================== 4. ACTIVITIES (3 floating 3D boxes with particles) =================== -->
-    <section class="section" id="skills" aria-labelledby="skills-title">
-      <div class="container">
-        <header class="section-head reveal">
-          <p class="eyebrow">✦ Activities</p>
-          <h2 id="skills-title" data-split>Constellations of Student Life</h2>
-        </header>
-
-        <div class="skills-grid" data-reveal-stagger>
-          <!-- Each box = .scene3d (floats + tilts toward the cursor) > .skill-card. Particles drift around it (data-particles). -->
-          <div class="scene3d fd-1 reveal" data-anim="rise">
-            <div class="float3d"><div class="tilt3d" data-tilt-card data-particles="12" data-particles-pad="34" data-particles-alpha="0.85">
-              <span class="plate plate--2" aria-hidden="true"></span>
-              <span class="plate plate--1" aria-hidden="true"></span>
-              <article class="skill-card panel">
-                <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
-                  <polyline points="10,56 38,24 70,42 102,12 130,30"/>
-                  <circle cx="10" cy="56" r="3"/><circle cx="38" cy="24" r="3.5"/><circle cx="70" cy="42" r="3"/><circle cx="102" cy="12" r="4"/><circle cx="130" cy="30" r="3"/>
-                </svg>
-                <h3>Leadership &amp; Organizations</h3>
-                <p>[The clubs, councils and committees you serve in, the positions you hold, and what you lead or help run.]</p>
-                <ul class="tag-list" aria-label="Examples">
-                  <li>[Position]</li><li>[Club / Org]</li><li>[Committee]</li>
-                </ul>
-                <span class="sheen" aria-hidden="true"></span>
-              </article>
-              <span class="depth-star depth-star--a" aria-hidden="true"></span>
-              <span class="depth-star depth-star--b" aria-hidden="true"></span>
-            </div></div>
-            <span class="ground-shadow" aria-hidden="true"></span>
+            <label class="hb-sort"><span>Order</span>
+              <select data-hb-sort>
+                <option value="new">Newest first</option>
+                <option value="old">Oldest first</option>
+                <option value="cat">By category</option>
+              </select>
+            </label>
           </div>
 
-          <div class="scene3d fd-2 reveal" data-anim="rise">
-            <div class="float3d"><div class="tilt3d" data-tilt-card data-particles="12" data-particles-pad="34" data-particles-alpha="0.85">
-              <span class="plate plate--2" aria-hidden="true"></span>
-              <span class="plate plate--1" aria-hidden="true"></span>
-              <article class="skill-card panel">
-                <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
-                  <polyline points="12,20 44,50 76,18 108,48 132,16"/>
-                  <circle cx="12" cy="20" r="3"/><circle cx="44" cy="50" r="3.5"/><circle cx="76" cy="18" r="4"/><circle cx="108" cy="48" r="3"/><circle cx="132" cy="16" r="3"/>
-                </svg>
-                <h3>Events &amp; Volunteering</h3>
-                <p>[Events you planned or helped run, outreach and community service, and the people you served.]</p>
-                <ul class="tag-list" aria-label="Examples">
-                  <li>[Event]</li><li>[Outreach]</li><li>[Service Hours]</li>
-                </ul>
-                <span class="sheen" aria-hidden="true"></span>
-              </article>
-              <span class="depth-star depth-star--a" aria-hidden="true"></span>
-              <span class="depth-star depth-star--b" aria-hidden="true"></span>
-            </div></div>
-            <span class="ground-shadow" aria-hidden="true"></span>
+          <div class="hb-book-wrap">
+            <div class="hb-book" tabindex="0" role="group" aria-roledescription="book"
+                 aria-label="Adventurer's Handbook. Use the left and right arrow keys to turn pages.">
+              <div class="hb-slot hb-left"></div>
+              <div class="hb-slot hb-right"></div>
+            </div>
           </div>
 
-          <div class="scene3d fd-3 reveal" data-anim="rise">
-            <div class="float3d"><div class="tilt3d" data-tilt-card data-particles="12" data-particles-pad="34" data-particles-alpha="0.85">
-              <span class="plate plate--2" aria-hidden="true"></span>
-              <span class="plate plate--1" aria-hidden="true"></span>
-              <article class="skill-card panel">
-                <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
-                  <polyline points="14,40 40,12 68,34 96,58 128,22"/>
-                  <circle cx="14" cy="40" r="3"/><circle cx="40" cy="12" r="3"/><circle cx="68" cy="34" r="4"/><circle cx="96" cy="58" r="3.5"/><circle cx="128" cy="22" r="3"/>
-                </svg>
-                <h3>Contests &amp; Academics</h3>
-                <p>[Competitions, hackathons, quiz bees, honors and academic projects, and where you placed.]</p>
-                <ul class="tag-list" aria-label="Examples">
-                  <li>[Competition]</li><li>[Honor]</li><li>[Project]</li>
-                </ul>
-                <span class="sheen" aria-hidden="true"></span>
-              </article>
-              <span class="depth-star depth-star--a" aria-hidden="true"></span>
-              <span class="depth-star depth-star--b" aria-hidden="true"></span>
-            </div></div>
-            <span class="ground-shadow" aria-hidden="true"></span>
+          <div class="hb-controls">
+            <button class="arrow-btn" type="button" data-hb-prev aria-label="Previous page">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4 7 12l8 8"/></svg>
+            </button>
+            <p class="hb-status" data-hb-status aria-live="polite">Cover</p>
+            <button class="arrow-btn" type="button" data-hb-next aria-label="Next page">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 4 8 8-8 8"/></svg>
+            </button>
+            <button class="btn btn--small" type="button" data-hb-toggle>Open the handbook</button>
           </div>
-        </div>
 
-        <!-- 🔗 BUTTON LINK: goes to page 2 -->
-        <div class="page-cta reveal" data-anim="zoom">
-          <a class="btn btn--primary" href="work.html#showcase">Open the Quest Log →</a>
+          <!-- ============ PROJECT LIST (the handbook is built from this) ============
+               Categories: design | research | leadership.  Research shows 2 projects only.
+               data-date = YYYY-MM, data-stars = 1-5, data-tags = comma separated.
+               IMAGE: replace the text in .hb-src-thumb with <img src="images/project-1.jpg" alt="[Describe the image]">
+               LINK: change the href of each link. -->
+          <ol class="hb-source" aria-label="Project list">
+            <li data-cat="design" data-date="2024-08" data-stars="4" data-tags="[tag], [tag]">
+              <h3>[Project Title 1: a poster, brand or interface]</h3>
+              <p class="hb-role">[Your role] · [Client or event]</p>
+              <p class="hb-sum">[The brief, your design idea, and how it was used.]</p>
+              <div class="hb-src-thumb">[PROJECT IMAGE 1]</div>
+              <a href="https://example.com/[project-1]" target="_blank" rel="noopener">Open project</a>
+            </li>
+            <li data-cat="research" data-date="2024-11" data-stars="4" data-tags="[tag], [tag]">
+              <h3>[Project Title 2: a research paper or study]</h3>
+              <p class="hb-role">[Your role] · [Adviser or lab]</p>
+              <p class="hb-sum">[The question you studied, your method, and the finding.]</p>
+              <div class="hb-src-thumb">[PROJECT IMAGE 2]</div>
+              <a href="https://example.com/[project-2]" target="_blank" rel="noopener">Open project</a>
+            </li>
+            <li data-cat="research" data-date="2025-01" data-stars="5" data-tags="[tag], [tag]">
+              <h3>[Project Title 3: a thesis or experiment]</h3>
+              <p class="hb-role">[Your role] · [Adviser or lab]</p>
+              <p class="hb-sum">[What you set out to prove, how you tested it, and what you found.]</p>
+              <div class="hb-src-thumb">[PROJECT IMAGE 3]</div>
+              <a href="https://example.com/[project-3]" target="_blank" rel="noopener">Open project</a>
+            </li>
+            <li data-cat="leadership" data-date="2025-05" data-stars="5" data-tags="[tag], [tag]">
+              <h3>[Project Title 4: an event or organization you led]</h3>
+              <p class="hb-role">[Your position] · [Organization]</p>
+              <p class="hb-sum">[What you led, how many people were involved, and what it achieved.]</p>
+              <div class="hb-src-thumb">[PROJECT IMAGE 4]</div>
+              <a href="https://example.com/[project-4]" target="_blank" rel="noopener">Open project</a>
+            </li>
+          </ol>
         </div>
       </div>
     </section>
@@ -346,5 +394,22 @@
   <footer class="site-footer">
     <p>© <span id="year">2026</span> [YOUR NAME]. An original fan-inspired design — no official game assets used. · <a href="work.html">Quest Log &amp; Contact →</a></p>
   </footer>
+
+  <!-- =================== RÉSUMÉ VIEWER ===================
+       namecard.js opens it from any [data-resume-open] button. The PDF loads on first open.
+       📄 Change data-src and the two hrefs if your file is not at files/resume.pdf. -->
+  <div class="resume-modal" id="resume-modal" role="dialog" aria-modal="true" aria-labelledby="rm-title" aria-hidden="true">
+    <div class="rm-panel">
+      <div class="rm-bar">
+        <h3 id="rm-title">Résumé — [YOUR NAME]</h3>
+        <div class="rm-actions">
+          <a class="btn btn--small" href="files/resume.pdf" download>Download ↓</a>
+          <button class="rm-x" type="button" aria-label="Close résumé">✕</button>
+        </div>
+      </div>
+      <iframe title="Résumé of [YOUR NAME] (PDF)" data-src="files/resume.pdf"></iframe>
+      <p class="rm-note">Can't see the preview? <a href="files/resume.pdf" target="_blank" rel="noopener">Open the PDF in a new tab</a>.</p>
+    </div>
+  </div>
 </body>
 </html>
