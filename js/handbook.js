@@ -3,12 +3,12 @@
    =====================================================================
    WHAT IT DOES
    - Builds a book from the <ol class="hb-source"> list in index.html:
-       cover → Table of Contents (by category) → Project Index
-       (by year) → one page per project → notes → closing page → back cover
+       cover → Table of Contents (by category) → one page per project
+       → closing page → back cover
    - Click the cover (or "Open the handbook") to open it. Turn pages with
      the arrows, the Left/Right keys, a swipe, or by clicking a line in the
-     contents or index (it flips straight to that project).
-   - The filter chips (Writing, Coding, Design, Research, Leadership) and
+     contents (it flips straight to that project).
+   - The filter chips (Design, Research, Leadership) and
      the Order menu rebuild the book on the spot.
    - Wide screens show a two-page spread with a real page-turn; narrow
      screens (phones) show one page at a time.
@@ -43,8 +43,6 @@
     singleBreakpoint: 760,    // px: below this width, show one page at a time
     maxPerCat: { research: 2 },   // most projects shown per category (research: 2 only)
     cats: {                   // category name + icon (add your own; also add a chip in index.html)
-      writing:    { name: 'Writing',    icon: '✎' },
-      coding:     { name: 'Coding',     icon: '⌘' },
       design:     { name: 'Design',     icon: '◈' },
       research:   { name: 'Research',   icon: '⚗' },
       leadership: { name: 'Leadership', icon: '♛' }
@@ -66,8 +64,9 @@
   }
 
   /* ---------- read the project list ---------- */
+  var counts = {};
   var all = Array.prototype.map.call(srcList.children, function (li, i) {
-    var cat = String(li.getAttribute('data-cat') || 'coding').toLowerCase().replace(/[^a-z0-9]/g, '') || 'coding';
+    var cat = String(li.getAttribute('data-cat') || 'design').toLowerCase().replace(/[^a-z0-9]/g, '') || 'design';
     if (!CONFIG.cats[cat]) {
       CONFIG.cats[cat] = { name: cat.charAt(0).toUpperCase() + cat.slice(1), icon: '✦' };
       CAT_ORDER.push(cat);
@@ -86,6 +85,10 @@
       thumb: thumb ? thumb.innerHTML : '[PROJECT IMAGE]',
       href: link ? link.getAttribute('href') : '', linkText: link ? link.textContent.trim() : 'Open project'
     };
+  }).filter(function (e) {
+    var cap = CONFIG.maxPerCat[e.cat];
+    counts[e.cat] = (counts[e.cat] || 0) + 1;
+    return !cap || counts[e.cat] <= cap;
   });
 
   /* ---------- state ---------- */
@@ -110,9 +113,9 @@
 
   function buildPages() {
     shown = sortList(all.filter(function (e) { return filter === 'all' || e.cat === filter; }));
-    var pgs = [{ t: 'cover' }, { t: 'toc' }, { t: 'index' }];
+    var pgs = [{ t: 'cover' }, { t: 'toc' }];
     shown.forEach(function (e) { pgs.push({ t: 'entry', e: e }); });
-    if (shown.length % 2 === 0) pgs.push({ t: 'notes' });   // keeps the page count even so the back cover lands on its own
+    if (shown.length % 2 === 1) pgs.push({ t: 'blank' });   // keeps the page count even
     pgs.push({ t: 'end' }, { t: 'back' });
     pageOf = {};
     pgs.forEach(function (p, i) { if (p.e) pageOf[p.e.id] = i; });
@@ -141,28 +144,6 @@
     return h + '</div>';
   }
 
-  function indexHTML() {
-    var h = '<div class="hb-body"><h3 class="hb-h">Project Index</h3><p class="hb-sub">In order of adventure · ' +
-      shown.length + ' of ' + all.length + ' shown</p>';
-    if (!shown.length) h += '<p class="hb-empty">Nothing here yet.</p>';
-    var asc = sortMode === 'old';
-    var years = [];
-    shown.forEach(function (e) { if (years.indexOf(e.y) < 0) years.push(e.y); });
-    years.sort(function (a, b) { return asc ? a - b : b - a; });
-    years.forEach(function (y) {
-      h += '<h4 class="hb-year">' + y + '</h4><ul class="hb-index">';
-      shown.filter(function (e) { return e.y === y; })
-        .sort(function (a, b) { return asc ? a.key - b.key : b.key - a.key; })
-        .forEach(function (e) {
-          h += '<li><button type="button" class="hb-toc-item" data-hb-goto="' + pageOf[e.id] + '"><span class="m">' + CONFIG.months[e.m - 1] +
-            '</span><span class="t">' + CONFIG.cats[e.cat].icon + ' ' + esc(e.title) + '</span><span class="dots" aria-hidden="true"></span><span class="p">' +
-            pageOf[e.id] + '</span></button></li>';
-        });
-      h += '</ul>';
-    });
-    return h + '</div>';
-  }
-
   function entryHTML(e) {
     var stars = new Array(e.stars + 1).join('★');
     var tags = e.tags.map(function (t) { return '<li>#' + esc(t) + '</li>'; }).join('');
@@ -183,10 +164,8 @@
           '<h3 class="hb-cover-title">Adventurer\'s<br>Handbook</h3><p class="hb-cover-name">' + esc(stage.getAttribute('data-owner') || '[YOUR NAME]') +
           '</p><p class="hb-cover-hint">Click to open ✦</p></div>';
       case 'toc': return tocHTML();
-      case 'index': return indexHTML();
       case 'entry': return entryHTML(p.e);
-      case 'notes':
-        return '<div class="hb-body"><h3 class="hb-h">Notes</h3><div class="hb-lines"></div><p class="hb-sub">[Space for your next adventure]</p></div>';
+      case 'blank': return '<div class="hb-end">' + EMBLEM + '</div>';
       case 'end':
         return '<div class="hb-end">' + EMBLEM + '<h3 class="hb-h">To be continued ✦</h3><p class="hb-sub">[A closing line: what you are working on next.]</p>' +
           '<button type="button" class="btn btn--small" data-hb-act="close">Close the handbook</button></div>';
@@ -334,7 +313,7 @@
   function rebuild() {
     clearLayers();
     pages = buildPages();
-    cur = cur > 0 ? 1 : 0;     // if the book is open, show the refreshed contents + index
+    cur = cur > 0 ? 1 : 0;     // if the book is open, show the refreshed contents
     renderStatic();
   }
 

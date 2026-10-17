@@ -1,35 +1,13 @@
-/* =====================================================================
-   theme.js — light / dark mode switch
-   =====================================================================
-   WHAT IT DOES
-   - Dark mode  = deep space / galaxy background (meteors.js)
-   - Light mode = Mondstadt sky + hills with passing winds (wind.js)
-   - Applies your saved choice BEFORE the page paints (this file is
-     loaded without "defer" so there is no flash of the wrong theme).
-   - Wires up the sun/moon button in the navbar and remembers the
-     choice in the browser (localStorage).
-   - Broadcasts a "themechange" event so the background and cursor
-     scripts can react.
-   - SAFE AGAINST DOUBLE LOADING: if the file is accidentally included
-     twice, the second copy does nothing (so the button can't toggle twice).
-   EDIT HERE: DEFAULT_THEME ('dark' or 'light').
-   ===================================================================== */
+/* theme.js — light / dark switch. Include it ONCE, without defer. */
 (function () {
   'use strict';
-
-  if (window.__portfolioThemeInit) return;   // never bind two handlers
+  if (window.__portfolioThemeInit) return;
   window.__portfolioThemeInit = true;
 
-  var DEFAULT_THEME = 'dark';
-  var KEY = 'portfolio-theme';
-  var root = document.documentElement;
+  var DEFAULT_THEME = 'dark', KEY = 'portfolio-theme', root = document.documentElement;
 
-  function read() {
-    try { return localStorage.getItem(KEY); } catch (e) { return null; }
-  }
-  function write(value) {
-    try { localStorage.setItem(KEY, value); } catch (e) { /* storage blocked: fine */ }
-  }
+  function read() { try { return localStorage.getItem(KEY); } catch (e) { return null; } }
+  function write(v) { try { localStorage.setItem(KEY, v); } catch (e) { /* ignore */ } }
 
   function syncButton(theme) {
     var btn = document.getElementById('theme-toggle');

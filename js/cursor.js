@@ -598,7 +598,7 @@
 
   function hardReset() {   // tab hidden: drop everything immediately (no leaks)
     state = 'active'; mergeFx = null; fanBoost = 1;
-    idle.comets = []; idle.dragons = []; idle.dust = [];
+        idle.comets = []; idle.birds = []; idle.dust = [];
     idle.fading = false; idle.fade = 1; idle.nextFly = Infinity;
     sctx.clearRect(0, 0, vw, vh); idle.skyDirty = false;
     clearInner();
@@ -630,10 +630,10 @@
       if (k >= 1) enterIdle();
     } else if (state === 'idle') {
       if (!idle.fading) {
-        var list = idle.theme === 'dark' ? idle.comets : idle.dragons;
+               var list = idle.theme === 'dark' ? idle.comets : idle.birds;
         if (!list.length) {
           idle.nextFly -= dt;
-          if (idle.nextFly <= 0) { if (idle.theme === 'dark') launchComet(false); else launchDragon(false); }
+          if (idle.nextFly <= 0) { if (idle.theme === 'dark') launchComet(false); else launchBird(false); }
         }
       }
     } else if (state === 'returning') {

@@ -2,7 +2,7 @@
 <!--
   =====================================================================
   GENSHIN-INSPIRED PORTFOLIO  —  PAGE 1 of 2: index.html
-  (Hero, About [namecard], Handbook [project index], Activities.  Page 2 = work.html has the Quest Log + Contact)
+  (Hero, About [namecard], Handbook [project index].  Page 2 = work.html has the Quest Log + Contact)
   =====================================================================
   QUICK EDIT GUIDE (full details in README.md)
   1. Search this file for "[" to find every placeholder in [BRACKETS].
@@ -41,10 +41,6 @@
   <script src="js/card3d.js" defer></script>
   <script src="js/particles.js" defer></script>
   <script src="js/scrollfx.js" defer></script>
-  <script src="js/puzzle.js" defer></script>
-  <script src="js/marquee.js" defer></script>
-  <script src="js/showcase.js" defer></script>
-  <!-- NEW: About namecard (flip + tabs + résumé viewer) and the Adventurer's Handbook -->
   <script src="js/namecard.js" defer></script>
   <script src="js/handbook.js" defer></script>
   <script src="js/card-depth.js" defer></script>
@@ -104,7 +100,6 @@
         <a href="#hero" class="is-active">Home</a>
         <a href="#about">About</a>
         <a href="#handbook">Handbook</a>
-        <a href="#skills">Activities</a>
         <a href="work.html#showcase">Quest Log</a>
         <a href="work.html#contact">Contact</a>
       </nav>
@@ -159,11 +154,9 @@
           <h2 id="about-title" data-split>The Student Behind the Activities</h2>
         </header>
 
-        <div class="scene3d nc-scene fd-1 reveal" data-anim="zoom">
-          <div class="float3d">
-            <div class="tilt3d" data-tilt-card>
-              <span class="plate plate--2" aria-hidden="true"></span>
-              <span class="plate plate--1" aria-hidden="true"></span>
+        <!-- The card floats and leans in 3D by itself (CSS depthFloat + card-depth.js),
+             so it sits in a plain stage: no extra tilt/float wrappers around it. -->
+        <div class="nc-stage reveal" data-anim="zoom">
 
               <!-- THE CARD. namecard.js flips it. Do not rename the data-nc-* attributes. -->
               <div class="namecard" data-namecard>
@@ -248,7 +241,7 @@
                     </div>
                   </div>
 
-                  <!-- ---------- BACK: narrative, strengths, goals, highlights, résumé ---------- -->
+                  <!-- ---------- BACK: hobbies, favorites, résumé ---------- -->
                   <div class="nc-face nc-back" data-nc-back inert aria-hidden="true">
                     <span class="nc-frame nc-frame--back" aria-hidden="true"></span>
                     <header class="nc-back-head">
@@ -260,70 +253,35 @@
                     </header>
 
                     <div class="nc-tabs" role="tablist" aria-label="Sections of the card">
-                      <button type="button" role="tab" id="nc-tab-story" aria-controls="nc-panel-story" aria-selected="true">Story</button>
-                      <button type="button" role="tab" id="nc-tab-strengths" aria-controls="nc-panel-strengths" aria-selected="false" tabindex="-1">Strengths</button>
-                      <button type="button" role="tab" id="nc-tab-goals" aria-controls="nc-panel-goals" aria-selected="false" tabindex="-1">Goals</button>
-                      <button type="button" role="tab" id="nc-tab-highlights" aria-controls="nc-panel-highlights" aria-selected="false" tabindex="-1">Highlights</button>
+                      <button type="button" role="tab" id="nc-tab-hobbies" aria-controls="nc-panel-hobbies" aria-selected="true">Hobbies</button>
+                      <button type="button" role="tab" id="nc-tab-favorites" aria-controls="nc-panel-favorites" aria-selected="false" tabindex="-1">Favorites</button>
                       <button type="button" role="tab" id="nc-tab-resume" aria-controls="nc-panel-resume" aria-selected="false" tabindex="-1">Résumé</button>
                     </div>
 
                     <div class="nc-panels">
-                      <!-- STORY: narrative of your academic journey -->
-                      <section id="nc-panel-story" role="tabpanel" aria-labelledby="nc-tab-story" tabindex="0">
-                        <p>[Paragraph one: your course, school and year level, and what made you start joining clubs, events and competitions.]</p>
-                        <p>[Paragraph two: the roles you have held, what they taught you about teamwork and leadership, and what you want to try next.]</p>
-                        <ol class="nc-miles" aria-label="Academic journey milestones">
-                          <li><b>[School Year 1]</b><span>[What you joined or started this year, and one thing you learned.]</span></li>
-                          <li><b>[School Year 2]</b><span>[A club, event or competition that changed how you work with others.]</span></li>
-                          <li><b>[School Year 3]</b><span>[A leadership role or big project you took on, and what it achieved.]</span></li>
-                          <li><b>[School Year 4 / Now]</b><span>[Where you are now and the next adventure you are heading toward.]</span></li>
-                        </ol>
-                      </section>
-
-                      <!-- CORE STRENGTHS -->
-                      <section id="nc-panel-strengths" role="tabpanel" aria-labelledby="nc-tab-strengths" tabindex="0" hidden>
-                        <ul class="nc-strengths">
-                          <li><strong>[Strength 1: e.g. Leadership]</strong><span>[One line of proof: where you showed it.]</span></li>
-                          <li><strong>[Strength 2: e.g. Communication]</strong><span>[One line of proof: where you showed it.]</span></li>
-                          <li><strong>[Strength 3: e.g. Problem solving]</strong><span>[One line of proof: where you showed it.]</span></li>
-                          <li><strong>[Strength 4: e.g. Teamwork]</strong><span>[One line of proof: where you showed it.]</span></li>
+                      <!-- HOBBIES: what you love doing when you are off the clock -->
+                      <section id="nc-panel-hobbies" role="tabpanel" aria-labelledby="nc-tab-hobbies" tabindex="0">
+                        <p>[One friendly line about what you do to relax and recharge between classes and activities.]</p>
+                        <ul class="nc-hobbies">
+                          <li><span class="ic" aria-hidden="true">🎮</span><div><b>[Hobby 1]</b><span>[A short line about it.]</span></div></li>
+                          <li><span class="ic" aria-hidden="true">🎵</span><div><b>[Hobby 2]</b><span>[A short line about it.]</span></div></li>
+                          <li><span class="ic" aria-hidden="true">📚</span><div><b>[Hobby 3]</b><span>[A short line about it.]</span></div></li>
+                          <li><span class="ic" aria-hidden="true">🍳</span><div><b>[Hobby 4]</b><span>[A short line about it.]</span></div></li>
+                          <li><span class="ic" aria-hidden="true">🏃</span><div><b>[Hobby 5]</b><span>[A short line about it.]</span></div></li>
+                          <li><span class="ic" aria-hidden="true">🎨</span><div><b>[Hobby 6]</b><span>[A short line about it.]</span></div></li>
                         </ul>
                       </section>
 
-                      <!-- LONG-TERM GOALS -->
-                      <section id="nc-panel-goals" role="tabpanel" aria-labelledby="nc-tab-goals" tabindex="0" hidden>
-                        <ol class="nc-miles" aria-label="Goals">
-                          <li><b>This year</b><span>[A near-term goal: a skill, a certification, a role you want.]</span></li>
-                          <li><b>In 1–3 years</b><span>[A mid-term goal: an internship, a project, a leadership post.]</span></li>
-                          <li><b>Long term</b><span>[Your long-term goal: the career or impact you are working toward.]</span></li>
-                        </ol>
-                      </section>
-
-                      <!-- HIGHLIGHTS: extracurriculars, leadership, volunteer / work -->
-                      <section id="nc-panel-highlights" role="tabpanel" aria-labelledby="nc-tab-highlights" tabindex="0" hidden>
-                        <div class="nc-hl">
-                          <div>
-                            <h4>Extracurriculars</h4>
-                            <ul>
-                              <li><b>[Club / Org]</b><span>[Year] · [What you did]</span></li>
-                              <li><b>[Club / Org]</b><span>[Year] · [What you did]</span></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h4>Leadership</h4>
-                            <ul>
-                              <li><b>[Position]</b><span>[Year] · [What you led]</span></li>
-                              <li><b>[Position]</b><span>[Year] · [What you led]</span></li>
-                            </ul>
-                          </div>
-                          <div>
-                            <h4>Volunteer &amp; Work</h4>
-                            <ul>
-                              <li><b>[Role / Project]</b><span>[Year] · [Who you helped]</span></li>
-                              <li><b>[Job / Internship]</b><span>[Year] · [What you did]</span></li>
-                            </ul>
-                          </div>
-                        </div>
+                      <!-- FAVORITES -->
+                      <section id="nc-panel-favorites" role="tabpanel" aria-labelledby="nc-tab-favorites" tabindex="0" hidden>
+                        <dl class="nc-fav">
+                          <div><dt>Favorite food</dt><dd>[Your favorite food]</dd></div>
+                          <div><dt>Favorite music</dt><dd>[Artist, song or genre]</dd></div>
+                          <div><dt>Favorite game</dt><dd>[Your favorite game]</dd></div>
+                          <div><dt>Favorite show / book</dt><dd>[Title]</dd></div>
+                          <div><dt>Favorite place</dt><dd>[A place you love]</dd></div>
+                          <div><dt>Favorite quote</dt><dd>[A line you live by]</dd></div>
+                        </dl>
                       </section>
 
                       <!-- RÉSUMÉ -->
@@ -340,11 +298,6 @@
 
                 </div>
               </div>
-              <span class="depth-star depth-star--a" aria-hidden="true"></span>
-              <span class="depth-star depth-star--b" aria-hidden="true"></span>
-            </div>
-          </div>
-          <span class="ground-shadow" aria-hidden="true"></span>
         </div>
         <p class="nc-hint reveal">Click the card or press “Flip card” to see the other side ✦</p>
       </div>
@@ -383,8 +336,6 @@
           <div class="hb-toolbar">
             <div class="hb-filters" role="group" aria-label="Filter projects by category">
               <button type="button" class="hb-chip-btn is-active" data-hb-filter="all" aria-pressed="true">All</button>
-              <button type="button" class="hb-chip-btn" data-hb-filter="writing" aria-pressed="false">✎ Writing</button>
-              <button type="button" class="hb-chip-btn" data-hb-filter="coding" aria-pressed="false">⌘ Coding</button>
               <button type="button" class="hb-chip-btn" data-hb-filter="design" aria-pressed="false">◈ Design</button>
               <button type="button" class="hb-chip-btn" data-hb-filter="research" aria-pressed="false">⚗ Research</button>
               <button type="button" class="hb-chip-btn" data-hb-filter="leadership" aria-pressed="false">♛ Leadership</button>
@@ -419,116 +370,12 @@
           </div>
 
           <!-- ============ PROJECT LIST (the handbook is built from this) ============
-               Copy an <li> to add a project. Edit data-cat (writing | coding | design | research | leadership),
+               Copy an <li> to add a project. Categories: design | research | leadership.
+               Research shows 2 projects only.
                data-date (YYYY-MM), data-stars (1-5) and data-tags (comma separated).
                IMAGE: replace the text in .hb-src-thumb with <img src="images/project-1.jpg" alt="[Describe the image]">
                🔗 YOUR LINK: change the href of each link. -->
           <ol class="hb-source" aria-label="Project index">
-            <li data-cat="writing" data-date="2023-09" data-stars="4" data-tags="[tag], [tag]">
-              <h3>[Project Title 1: an article, essay or paper]</h3>
-              <p class="hb-role">[Your role] · [Where it was published or submitted]</p>
-              <p class="hb-sum">[What it is about, what you contributed, and the result. Two sentences.]</p>
-              <div class="hb-src-thumb">[PROJECT IMAGE 1]</div>
-              <a href="https://example.com/[project-1]" target="_blank" rel="noopener">Open project</a>
-            </li>
-            <li data-cat="coding" data-date="2024-02" data-stars="5" data-tags="[tag], [tag], [tag]">
-              <h3>[Project Title 2: an app, website or program]</h3>
-              <p class="hb-role">[Your role] · [Team or solo]</p>
-              <p class="hb-sum">[What it does, the tools you used, and what you learned.]</p>
-              <div class="hb-src-thumb">[PROJECT IMAGE 2]</div>
-              <a href="https://example.com/[project-2]" target="_blank" rel="noopener">Open project</a>
-            </li>
-            <li data-cat="design" data-date="2024-08" data-stars="4" data-tags="[tag], [tag]">
-              <h3>[Project Title 3: a poster, brand or interface]</h3>
-              <p class="hb-role">[Your role] · [Client or event]</p>
-              <p class="hb-sum">[The brief, your design idea, and how it was used.]</p>
-              <div class="hb-src-thumb">[PROJECT IMAGE 3]</div>
-              <a href="https://example.com/[project-3]" target="_blank" rel="noopener">Open project</a>
-            </li>
-            <li data-cat="research" data-date="2025-01" data-stars="5" data-tags="[tag], [tag]">
-              <h3>[Project Title 4: a study or thesis]</h3>
-              <p class="hb-role">[Your role] · [Adviser or lab]</p>
-              <p class="hb-sum">[The question you studied, your method, and the finding.]</p>
-              <div class="hb-src-thumb">[PROJECT IMAGE 4]</div>
-              <a href="https://example.com/[project-4]" target="_blank" rel="noopener">Open project</a>
-            </li>
-            <li data-cat="leadership" data-date="2025-05" data-stars="5" data-tags="[tag], [tag]">
-              <h3>[Project Title 5: an event or organization you led]</h3>
-              <p class="hb-role">[Your position] · [Organization]</p>
-              <p class="hb-sum">[What you led, how many people were involved, and what it achieved.]</p>
-              <div class="hb-src-thumb">[PROJECT IMAGE 5]</div>
-              <a href="https://example.com/[project-5]" target="_blank" rel="noopener">Open project</a>
-            </li>
-            <li data-cat="coding" data-date="2025-09" data-stars="4" data-tags="[tag], [tag]">
-              <h3>[Project Title 6: another build or hackathon entry]</h3>
-              <p class="hb-role">[Your role] · [Event or class]</p>
-              <p class="hb-sum">[The challenge, your part, and where you placed.]</p>
-              <div class="hb-src-thumb">[PROJECT IMAGE 6]</div>
-              <a href="https://example.com/[project-6]" target="_blank" rel="noopener">Open project</a>
-            </li>
-          </ol>
-        </div>
-      </div>
-    </section>
-
-    <div class="star-divider reveal" aria-hidden="true"><span></span><i></i><span></span></div>
-
-    <!-- =================== 4. ACTIVITIES (3 floating 3D boxes with particles) =================== -->
-    <section class="section" id="skills" aria-labelledby="skills-title">
-      <div class="container">
-        <header class="section-head reveal">
-          <p class="eyebrow">✦ Activities</p>
-          <h2 id="skills-title" data-split>Constellations of Student Life</h2>
-        </header>
-
-        <div class="skills-grid" data-reveal-stagger>
-          <div class="scene3d fd-1 reveal" data-anim="rise">
-            <div class="float3d"><div class="tilt3d" data-tilt-card data-particles="12" data-particles-pad="34" data-particles-alpha="0.85">
-              <span class="plate plate--2" aria-hidden="true"></span>
-              <span class="plate plate--1" aria-hidden="true"></span>
-              <article class="skill-card panel">
-                <svg class="constellation" viewBox="0 0 140 70" aria-hidden="true" focusable="false">
-                  <polyline points="10,56 38,24 70,42 102,12 130,30"/>
-                  <circle cx="10" cy="56" r="3"/><circle cx="38" cy="24" r="3.5"/><circle cx="70" cy="42" r="3"/><circle cx="102" cy="12" r="4"/><circle cx="130" cy="30" r="3"/>
-                </svg>
-                <h3>Leadership &amp; Organizations</h3>
-                <p>[The clubs, councils and committees you serve in, the positions you hold, and what you lead or help run.]</p>
-                <ul class="tag-list" aria-label="Examples">
-                  <li>[Position]</li><li>[Club / Org]</li><li>[Committee]</li>
-                </ul>
-                <span class="sheen" aria-hidden="true"></span>
-              </article>
-              <span class="depth-star depth-star--a" aria-hidden="true"></span>
-              <span class="depth-star depth-star--b" aria-hidden="true"></span>
-            </div></div>
-            <span class="ground-shadow" aria-hidden="true"></span>
-          </div>
-
-          <div class="hb-book-wrap">
-            <div class="hb-book" tabindex="0" role="group" aria-roledescription="book"
-                 aria-label="Adventurer's Handbook. Use the left and right arrow keys to turn pages.">
-              <div class="hb-slot hb-left"></div>
-              <div class="hb-slot hb-right"></div>
-            </div>
-          </div>
-
-          <div class="hb-controls">
-            <button class="arrow-btn" type="button" data-hb-prev aria-label="Previous page">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 4 7 12l8 8"/></svg>
-            </button>
-            <p class="hb-status" data-hb-status aria-live="polite">Cover</p>
-            <button class="arrow-btn" type="button" data-hb-next aria-label="Next page">
-              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="m9 4 8 8-8 8"/></svg>
-            </button>
-            <button class="btn btn--small" type="button" data-hb-toggle>Open the handbook</button>
-          </div>
-
-          <!-- ============ PROJECT LIST (the handbook is built from this) ============
-               Categories: design | research | leadership.  Research shows 2 projects only.
-               data-date = YYYY-MM, data-stars = 1-5, data-tags = comma separated.
-               IMAGE: replace the text in .hb-src-thumb with <img src="images/project-1.jpg" alt="[Describe the image]">
-               LINK: change the href of each link. -->
-          <ol class="hb-source" aria-label="Project list">
             <li data-cat="design" data-date="2024-08" data-stars="4" data-tags="[tag], [tag]">
               <h3>[Project Title 1: a poster, brand or interface]</h3>
               <p class="hb-role">[Your role] · [Client or event]</p>
@@ -566,22 +413,5 @@
   <footer class="site-footer">
     <p>© <span id="year">2026</span> [YOUR NAME]. An original fan-inspired design — no official game assets used. · <a href="work.html">Quest Log &amp; Contact →</a></p>
   </footer>
-
-  <!-- =================== RÉSUMÉ VIEWER ===================
-       namecard.js opens it from any [data-resume-open] button. The PDF loads on first open.
-       📄 Change data-src and the two hrefs if your file is not at files/resume.pdf. -->
-  <div class="resume-modal" id="resume-modal" role="dialog" aria-modal="true" aria-labelledby="rm-title" aria-hidden="true">
-    <div class="rm-panel">
-      <div class="rm-bar">
-        <h3 id="rm-title">Résumé — [YOUR NAME]</h3>
-        <div class="rm-actions">
-          <a class="btn btn--small" href="files/resume.pdf" download>Download ↓</a>
-          <button class="rm-x" type="button" aria-label="Close résumé">✕</button>
-        </div>
-      </div>
-      <iframe title="Résumé of [YOUR NAME] (PDF)" data-src="files/resume.pdf"></iframe>
-      <p class="rm-note">Can't see the preview? <a href="files/resume.pdf" target="_blank" rel="noopener">Open the PDF in a new tab</a>.</p>
-    </div>
-  </div>
 </body>
 </html>

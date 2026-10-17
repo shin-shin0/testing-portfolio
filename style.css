@@ -1715,3 +1715,11 @@ html.stage-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .namecard, .hb-book-wrap, .namecard::after, .hb-book-wrap::after { animation: none; }
 }
+/* ---------- audio button ---------- */
+.audio-toggle .ic-on { display: none; }
+.audio-toggle.is-on .ic-on { display: block; }
+.audio-toggle.is-on .ic-off { display: none; }
+.audio-toggle.is-on { box-shadow: 0 0 16px rgba(var(--gold-rgb), .55); animation: audioPulse 2.4s ease-in-out infinite; }
+@keyframes audioPulse { 50% { box-shadow: 0 0 26px rgba(var(--gold-rgb), .85); } }
+.audio-toggle.is-error { opacity: .55; }
+@media (prefers-reduced-motion: reduce) { .audio-toggle.is-on { animation: none; } }
