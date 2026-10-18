@@ -23,7 +23,7 @@
   var CONFIG = {
     light: 'audio/dusk-in-mondstadt.mp3',
     dark: 'audio/spiral-abyss-battle-themes.mp3',
-    volume: 0.6         // 0..1
+    volume: 0.10         // 0..1
   };
 
   var root = document.documentElement;
