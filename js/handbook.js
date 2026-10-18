@@ -161,13 +161,13 @@
     switch (p.t) {
       case 'cover':
         return '<div class="hb-cover-in" data-hb-act="open">' + EMBLEM + '<p class="hb-cover-kicker">Student Portfolio</p>' +
-          '<h3 class="hb-cover-title">Adventurer\'s<br>Handbook</h3><p class="hb-cover-name">' + esc(stage.getAttribute('data-owner') || '[YOUR NAME]') +
+          '<h3 class="hb-cover-title">Adventurer\'s<br>Handbook</h3><p class="hb-cover-name">' + esc(stage.getAttribute('data-owner') || ' Feliscent Shayne A. Antido') +
           '</p><p class="hb-cover-hint">Click to open ✦</p></div>';
       case 'toc': return tocHTML();
       case 'entry': return entryHTML(p.e);
       case 'blank': return '<div class="hb-end">' + EMBLEM + '</div>';
       case 'end':
-        return '<div class="hb-end">' + EMBLEM + '<h3 class="hb-h">To be continued ✦</h3><p class="hb-sub">[A closing line: what you are working on next.]</p>' +
+        return '<div class="hb-end">' + EMBLEM + '<h3 class="hb-h">To be continued ✦</h3><p class="hb-sub">Your adventures await!</p>' +
           '<button type="button" class="btn btn--small" data-hb-act="close">Close the handbook</button></div>';
       default:
         return '<div class="hb-cover-in">' + EMBLEM + '</div>';
